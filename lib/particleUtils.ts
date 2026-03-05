@@ -1,30 +1,33 @@
-// Generate particles in a 3D sphere cluster
-const generateSphereParticles = (count: number, radius: number, layerStart: number) => {
-    const particles = [];
+// Generate particles distributed in 3D sphere volume (not just surface)
+const generateSpherePoints = (count: number) => {
+    const points = [];
     const colors = ['#06b6d4', '#2563eb', '#8b5cf6']; // cyan, blue, purple
     
     for (let i = 0; i < count; i++) {
-        // Use Fibonacci sphere algorithm for even distribution
+        // Fibonacci sphere for even surface distribution
         const phi = Math.acos(1 - 2 * (i + 0.5) / count);
         const theta = Math.PI * (1 + Math.sqrt(5)) * i;
         
-        // Add slight randomness to radius for organic feel
-        const r = radius * (0.8 + Math.random() * 0.4);
+        // Random radius for volumetric distribution (not just surface)
+        const r = 2.5 + Math.random() * 2.5; // radius between 2.5 and 5
         
         const x = r * Math.sin(phi) * Math.cos(theta);
         const y = r * Math.sin(phi) * Math.sin(theta);
         const z = r * Math.cos(phi);
         
-        particles.push({
-            idx: `sphere-${layerStart + i}`,
+        points.push({
+            idx: `point-${i}`,
             position: [x, y, z] as [number, number, number],
-            color: colors[i % colors.length]
+            color: colors[Math.floor(Math.random() * colors.length)]
         });
     }
     
-    return particles;
+    return points;
 };
 
-// Create multiple layers for volumetric effect
-export const pointsInner = generateSphereParticles(150, 2.5, 0);
-export const pointsOuter = generateSphereParticles(200, 4.5, 150);
+// Generate a single large set of particles
+const allPoints = generateSpherePoints(800);
+
+// Split into two arrays for compatibility
+export const pointsInner = allPoints.slice(0, 400);
+export const pointsOuter = allPoints.slice(400);

@@ -20,8 +20,9 @@ const ParticleRingPage = () => {
                 className="bg-slate-900"
             >
                 <OrbitControls maxDistance={20} minDistance={10} />
-                <directionalLight />
-                <pointLight position={[-30, 0, -30]} power={10.0} />
+                <ambientLight intensity={0.5} />
+                <pointLight position={[-30, 0, -30]} intensity={1.0} />
+                <pointLight position={[30, 0, 30]} intensity={0.5} />
                 <PointCircle />
             </Canvas>
 
@@ -71,11 +72,11 @@ interface PointProps {
 
 const Point = ({ position, color }: PointProps) => {
     return (
-        <Sphere position={position} args={[0.08, 8, 8]}>
+        <Sphere position={position} args={[0.05, 6, 6]}>
             <meshStandardMaterial
                 emissive={color}
-                emissiveIntensity={0.6}
-                roughness={0.4}
+                emissiveIntensity={0.8}
+                roughness={0.3}
                 color={color}
             />
         </Sphere>
