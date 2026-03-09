@@ -81,12 +81,10 @@ export const skills: Skill[] = [
     { name: 'Next.js', level: 88, category: 'Frontend' },
     { name: 'TypeScript', level: 85, category: 'Frontend' },
     { name: 'TailwindCSS', level: 92, category: 'Frontend' },
-    { name: 'Three.js', level: 75, category: 'Frontend' },
 
     // Backend & Data
-    { name: 'Python', level: 90, category: 'Backend' },
+    { name: 'Python', level: 50, category: 'Backend' },
     { name: 'Pandas', level: 88, category: 'Backend' },
-    { name: 'NumPy', level: 85, category: 'Backend' },
     { name: 'GeoPandas', level: 82, category: 'Backend' },
 
     // Engineering

@@ -85,11 +85,11 @@ export function Button({
 
     const variants = {
         primary:
-            'bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/30',
+            'bg-white hover:bg-gray-100 text-black shadow-lg shadow-white/10',
         secondary:
-            'bg-accent hover:bg-accent/90 text-white shadow-lg shadow-accent/30',
+            'bg-gray-700 hover:bg-gray-600 text-white shadow-lg shadow-gray-700/30',
         outline:
-            'border-2 border-primary text-primary hover:bg-primary hover:text-white',
+            'border-2 border-white text-white hover:bg-white hover:text-black',
     };
 
     const variantStyles = variants[variant];

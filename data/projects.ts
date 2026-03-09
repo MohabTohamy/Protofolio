@@ -17,7 +17,7 @@ export const projects: Project[] = [
     {
         id: 'cft-processing',
         title: 'CFT Data Processing Automation',
-        description: 'Automated processing pipeline for Continuous Friction Tester data analysis',
+        description: 'Building full system for pavement and assets analytics for the whole Saudi Arabia',
         longDescription: 'Built a comprehensive automation system that processes raw CFT data, performs statistical analysis, generates reports, and creates visualizations. Reduced processing time from 4 hours to 15 minutes.',
         technologies: ['Python', 'Pandas', 'NumPy', 'Matplotlib', 'Excel'],
         category: 'Automation',
@@ -28,7 +28,7 @@ export const projects: Project[] = [
     {
         id: 'excel-row-split',
         title: 'Excel Row Split Tool',
-        description: 'Interactive tool for splitting Excel rows based on length and segment size',
+        description: 'Automation of all pavement and assets data by Python and its libraries (not only CFT)',
         longDescription: 'Web-based tool that allows engineers to input length values and automatically split them into equal segments. Used daily by the pavement analysis team.',
         technologies: ['React', 'TypeScript', 'Next.js', 'TailwindCSS'],
         category: 'Frontend',
@@ -39,7 +39,7 @@ export const projects: Project[] = [
     {
         id: 'coordinate-matching',
         title: 'Coordinate Matching Automation',
-        description: 'GIS tool for matching survey coordinates with road section codes',
+        description: 'Excel tools built with Python, converted to .exe files to make them easier for all company employees to use',
         longDescription: 'Python script that reads coordinate data from Excel and shapefiles, performs spatial joins, and outputs matched results with section codes. Handles 10,000+ points in seconds.',
         technologies: ['Python', 'GeoPandas', 'Shapely', 'QGIS'],
         category: 'GIS',

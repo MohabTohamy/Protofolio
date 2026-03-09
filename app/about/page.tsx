@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Section, SectionTitle, Card } from '@/components/UI';
 import { experiences, skills } from '@/data/experience';
 import { Code, Wrench, Map, Database } from 'lucide-react';
+import FunnySurvey from '@/components/FunnySurvey';
 
 export default function AboutPage() {
     return (
@@ -35,6 +36,11 @@ export default function AboutPage() {
                         </p>
                     </div>
                 </Card>
+
+                {/* Funny Survey Component */}
+                <div className="mb-12">
+                    <FunnySurvey />
+                </div>
 
                 {/* Why Austria Section */}
                 <Card className="mb-12 bg-linear-to-br from-red-500/5 via-white/5 to-red-500/5 border-2 border-red-500/20">

@@ -42,8 +42,8 @@ export default function Navigation() {
                                     key={item.name}
                                     href={item.href}
                                     className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${isActive
-                                        ? 'bg-primary text-white'
-                                        : 'text-foreground hover:bg-card hover:text-primary'
+                                        ? 'bg-white text-black border border-white'
+                                        : 'text-white hover:bg-card hover:text-white border border-transparent'
                                         }`}
                                 >
                                     {item.name}
@@ -83,8 +83,8 @@ export default function Navigation() {
                                         key={item.name}
                                         href={item.href}
                                         className={`block px-4 py-2 rounded-lg text-sm font-medium transition-all ${isActive
-                                            ? 'bg-primary text-white'
-                                            : 'text-foreground hover:bg-card hover:text-primary'
+                                            ? 'bg-white text-black border border-white'
+                                            : 'text-white hover:bg-card hover:text-white border border-transparent'
                                             }`}
                                         onClick={() => setMobileMenuOpen(false)}
                                     >

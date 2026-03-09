@@ -6,6 +6,7 @@ import { Button, Section, SectionTitle, Card } from '@/components/UI';
 import Link from 'next/link';
 import { projects } from '@/data/projects';
 import { skills } from '@/data/experience';
+import FunnySurvey from '@/components/FunnySurvey';
 
 export default function HomePage() {
   const featuredProjects = projects.filter((p) => p.featured).slice(0, 3);
@@ -32,13 +33,13 @@ export default function HomePage() {
               </span>
             </h1>
             <h2 className="text-2xl md:text-4xl font-semibold text-foreground mb-4">
-              Software Engineer
+              Frontend Engineer
             </h2>
             <p className="text-lg md:text-xl text-foreground/80 max-w-3xl mx-auto mb-8">
               Seeking Opportunities in Austria 🇦🇹
             </p>
             <p className="text-foreground/70 max-w-2xl mx-auto mb-12">
-              Full-stack developer specializing in infrastructure engineering platforms,
+              Frontend engineer building systems with many functionalities, specializing in infrastructure engineering platforms,
               GIS solutions, and data automation. Passionate about Austria&apos;s innovation
               culture and commitment to sustainable engineering.
             </p>
@@ -58,6 +59,11 @@ export default function HomePage() {
         </div>
       </Section>
 
+      {/* Funny Survey Component */}
+      <Section>
+        <FunnySurvey />
+      </Section>
+
       {/* What I Do Section */}
       <Section className="bg-card/30">
         <SectionTitle subtitle="Engineering + Programming">
@@ -67,28 +73,28 @@ export default function HomePage() {
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[
             {
-              icon: <Layers className="w-8 h-8 text-primary" />,
-              title: 'Infrastructure Engineering',
+              icon: <Code className="w-8 h-8 text-primary" />,
+              title: 'Frontend Development',
               description:
-                'Pavement data analysis using LCMS, CFT, FWD, HWD, and GPR technologies',
+                'Modern web applications with React, Next.js, TypeScript, and interactive visualizations',
             },
             {
-              icon: <MapPin className="w-8 h-8 text-accent" />,
-              title: 'GIS & Geospatial',
-              description:
-                'Coordinate processing, spatial analysis, and interactive map visualization',
-            },
-            {
-              icon: <Database className="w-8 h-8 text-primary" />,
+              icon: <Database className="w-8 h-8 text-accent" />,
               title: 'Data Automation',
               description:
                 'Python scripts for data processing, report generation, and workflow automation',
             },
             {
-              icon: <Code className="w-8 h-8 text-accent" />,
-              title: 'Frontend Development',
+              icon: <MapPin className="w-8 h-8 text-primary" />,
+              title: 'GIS & Geospatial',
               description:
-                'Modern web applications with React, Next.js, TypeScript, and Three.js',
+                'Coordinate processing, spatial analysis, and interactive map visualization',
+            },
+            {
+              icon: <Layers className="w-8 h-8 text-accent" />,
+              title: 'Pavement & Assets Engineering',
+              description:
+                'Pavement data analysis using LCMS, CFT, FWD, HWD, and GPR technologies',
             },
           ].map((item, index) => (
             <motion.div
@@ -224,17 +230,17 @@ export default function HomePage() {
                 icon: '🏢',
                 title: 'Target Companies',
                 items: [
+                  'Engineering Software Development',
                   'Infrastructure & Civil Engineering Firms',
                   'GIS & Mapping Technology Companies',
                   'Smart City & IoT Solutions Providers',
-                  'Engineering Software Development',
                 ]
               },
               {
                 icon: '💼',
                 title: 'What I Bring',
                 items: [
-                  'Full-stack development expertise',
+                  'Frontend development expertise',
                   'Infrastructure engineering knowledge',
                   'Data automation & processing skills',
                   'GIS & geospatial analysis experience',
@@ -244,10 +250,9 @@ export default function HomePage() {
                 icon: '🎯',
                 title: 'Ideal Roles',
                 items: [
-                  'Software Engineer (Full-stack)',
+                  'Software Engineer (Frontend)',
                   'GIS Application Developer',
                   'Engineering Platform Developer',
-                  'Infrastructure Data Specialist',
                 ]
               },
             ].map((section, index) => (
@@ -278,12 +283,10 @@ export default function HomePage() {
 
           <div className="text-center bg-card/50 rounded-lg p-6 border border-primary/20">
             <p className="text-foreground/90 text-lg mb-4">
-              <span className="font-bold text-primary">Why Austria?</span> Combining world-class engineering
-              culture with exceptional quality of life, Austria offers the perfect environment for professional
-              growth in infrastructure technology.
+              <span className="font-bold text-primary">Why Austria?</span> I know you gonna ask this question...
             </p>
             <Button href="/about" variant="primary">
-              Learn More About My Austria Focus <ArrowRight className="inline ml-2 w-4 h-4" />
+              Press Here to Know <ArrowRight className="inline ml-2 w-4 h-4" />
             </Button>
           </div>
         </Card>

@@ -1,0 +1,389 @@
+{
+    "type": "FeatureCollection",
+    "metadata": {
+        "name": "Sample Road Infrastructure Data",
+        "description": "Sample data for testing the interactive map. Includes roads, assets, and condition data.",
+        "generated": "2026-03-08",
+        "coordinateSystem": "WGS84",
+        "location": "Sample Area"
+    },
+    "features": [
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [
+                        46.6753,
+                        24.7136
+                    ],
+                    [
+                        46.6763,
+                        24.7146
+                    ],
+                    [
+                        46.6773,
+                        24.7156
+                    ],
+                    [
+                        46.6783,
+                        24.7166
+                    ]
+                ]
+            },
+            "properties": {
+                "code": "RD-001-L1",
+                "name": "King Fahd Road - Lane 1",
+                "type": "pavement",
+                "layer": "pci",
+                "lane": "1",
+                "value": 85,
+                "condition": "good",
+                "surveyDate": "2026-02-15",
+                "length": 1250
+            }
+        },
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [
+                        46.6783,
+                        24.7166
+                    ],
+                    [
+                        46.6793,
+                        24.7176
+                    ],
+                    [
+                        46.6803,
+                        24.7186
+                    ],
+                    [
+                        46.6813,
+                        24.7196
+                    ]
+                ]
+            },
+            "properties": {
+                "code": "RD-001-L2",
+                "name": "King Fahd Road - Lane 2",
+                "type": "pavement",
+                "layer": "pci",
+                "lane": "2",
+                "value": 65,
+                "condition": "fair",
+                "surveyDate": "2026-02-15",
+                "length": 1250
+            }
+        },
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [
+                        46.6813,
+                        24.7196
+                    ],
+                    [
+                        46.6823,
+                        24.7206
+                    ],
+                    [
+                        46.6833,
+                        24.7216
+                    ],
+                    [
+                        46.6843,
+                        24.7226
+                    ]
+                ]
+            },
+            "properties": {
+                "code": "RD-001-L3",
+                "name": "King Fahd Road - Lane 3",
+                "type": "pavement",
+                "layer": "pci",
+                "lane": "3",
+                "value": 35,
+                "condition": "poor",
+                "surveyDate": "2026-02-15",
+                "length": 1250
+            }
+        },
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [
+                        46.6750,
+                        24.7200
+                    ],
+                    [
+                        46.6760,
+                        24.7210
+                    ],
+                    [
+                        46.6770,
+                        24.7220
+                    ],
+                    [
+                        46.6780,
+                        24.7230
+                    ]
+                ]
+            },
+            "properties": {
+                "code": "RD-002-L1",
+                "name": "Olaya Street - Lane 1",
+                "type": "pavement",
+                "layer": "iri",
+                "lane": "1",
+                "value": 1.5,
+                "condition": "good",
+                "surveyDate": "2026-02-20",
+                "length": 1100
+            }
+        },
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [
+                        46.6780,
+                        24.7230
+                    ],
+                    [
+                        46.6790,
+                        24.7240
+                    ],
+                    [
+                        46.6800,
+                        24.7250
+                    ],
+                    [
+                        46.6810,
+                        24.7260
+                    ]
+                ]
+            },
+            "properties": {
+                "code": "RD-002-L2",
+                "name": "Olaya Street - Lane 2",
+                "type": "pavement",
+                "layer": "iri",
+                "lane": "2",
+                "value": 3.5,
+                "condition": "fair",
+                "surveyDate": "2026-02-20",
+                "length": 1100
+            }
+        },
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [
+                        46.6700,
+                        24.7100
+                    ],
+                    [
+                        46.6710,
+                        24.7110
+                    ],
+                    [
+                        46.6720,
+                        24.7120
+                    ]
+                ]
+            },
+            "properties": {
+                "code": "GR-001",
+                "name": "Guardrail Section A",
+                "type": "asset",
+                "layer": "guardrail",
+                "value": 75,
+                "aci": 75,
+                "condition": "good",
+                "installDate": "2024-05-10",
+                "length": 250
+            }
+        },
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [
+                        46.6720,
+                        24.7120
+                    ],
+                    [
+                        46.6730,
+                        24.7130
+                    ],
+                    [
+                        46.6740,
+                        24.7140
+                    ]
+                ]
+            },
+            "properties": {
+                "code": "GR-002",
+                "name": "Guardrail Section B",
+                "type": "asset",
+                "layer": "guardrail",
+                "value": 45,
+                "aci": 45,
+                "condition": "fair",
+                "installDate": "2023-08-15",
+                "length": 250
+            }
+        },
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [
+                        46.6850,
+                        24.7150
+                    ],
+                    [
+                        46.6860,
+                        24.7160
+                    ],
+                    [
+                        46.6870,
+                        24.7170
+                    ]
+                ]
+            },
+            "properties": {
+                "code": "CS-001",
+                "name": "Curb Stone Section 1",
+                "type": "asset",
+                "layer": "curbstone",
+                "value": 82,
+                "aci": 82,
+                "condition": "good",
+                "installDate": "2025-01-20",
+                "length": 300
+            }
+        },
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    46.6755,
+                    24.7145
+                ]
+            },
+            "properties": {
+                "code": "LP-001",
+                "name": "Light Pole 001",
+                "type": "asset",
+                "layer": "lightpoles",
+                "value": 90,
+                "aci": 90,
+                "condition": "good",
+                "installDate": "2025-03-10",
+                "height": 12,
+                "wattage": 250
+            }
+        },
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    46.6775,
+                    24.7165
+                ]
+            },
+            "properties": {
+                "code": "LP-002",
+                "name": "Light Pole 002",
+                "type": "asset",
+                "layer": "lightpoles",
+                "value": 55,
+                "aci": 55,
+                "condition": "fair",
+                "installDate": "2023-11-05",
+                "height": 12,
+                "wattage": 250
+            }
+        },
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    46.6795,
+                    24.7185
+                ]
+            },
+            "properties": {
+                "code": "RS-001",
+                "name": "Road Sign 001",
+                "type": "asset",
+                "layer": "roadsigns",
+                "value": 68,
+                "aci": 68,
+                "condition": "fair",
+                "installDate": "2024-06-15",
+                "signType": "Warning",
+                "message": "Speed Limit 80"
+            }
+        },
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    46.6815,
+                    24.7205
+                ]
+            },
+            "properties": {
+                "code": "MH-001",
+                "name": "Manhole 001",
+                "type": "asset",
+                "layer": "manhole",
+                "value": 35,
+                "aci": 35,
+                "condition": "poor",
+                "installDate": "2020-04-20",
+                "diameter": 0.8,
+                "depth": 2.5
+            }
+        },
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    46.6835,
+                    24.7225
+                ]
+            },
+            "properties": {
+                "code": "CB-001",
+                "name": "Catch Basin 001",
+                "type": "asset",
+                "layer": "catchbasin",
+                "value": 72,
+                "aci": 72,
+                "condition": "good",
+                "installDate": "2024-09-10",
+                "size": "Large"
+            }
+        }
+    ]
+}

@@ -1,12 +1,13 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0F172A;
-  --foreground: #E2E8F0;
-  --primary: #2563EB;
-  --accent: #06B6D4;
-  --card: #1E293B;
-  --card-hover: #334155;
+  --background: #000000;
+  --foreground: #FFFFFF;
+  --primary: #FFFFFF;
+  --accent: #888888;
+  --card: #1A1A1A;
+  --card-hover: #2A2A2A;
+  --secondary: #666666;
 }
 
 @theme inline {
@@ -31,16 +32,16 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #1E293B;
+  background: #1A1A1A;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #2563EB;
+  background: #888888;
   border-radius: 5px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #06B6D4;
+  background: #AAAAAA;
 }
 
 /* Smooth scrolling */
@@ -50,7 +51,7 @@ html {
 
 /* Glassmorphism utility */
 .glass {
-  background: rgba(30, 41, 59, 0.7);
+  background: rgba(26, 26, 26, 0.7);
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(37, 99, 235, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
