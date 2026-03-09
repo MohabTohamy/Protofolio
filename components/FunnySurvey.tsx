@@ -64,11 +64,11 @@ export default function FunnySurvey() {
         // Only set center position on mount of confirmation screen
         const button = escapingButtonRef.current;
         const buttonRect = button.getBoundingClientRect();
-        
+
         // Calculate center position of viewport
         const centerX = (window.innerWidth / 2) - (buttonRect.width / 2);
         const centerY = (window.innerHeight / 2) - (buttonRect.height / 2);
-        
+
         // Set initial centered position
         setButtonPosition({ x: centerX, y: centerY });
     }, [showConfirmation]); // Only run when confirmation screen opens
