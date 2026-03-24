@@ -4,7 +4,7 @@ import { Suspense, useRef, useEffect, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import { Section, SectionTitle, Card } from '@/components/UI';
-import { BoxSelect, Layers as LayersIcon, ChevronDown, Rocket, Sparkles } from 'lucide-react';
+import { BoxSelect, Layers as LayersIcon, ChevronDown, Rocket, Sparkles, Zap } from 'lucide-react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import * as THREE from 'three';
@@ -20,6 +20,7 @@ export default function ThreeLabPage() {
     const section2Ref = useRef<HTMLDivElement>(null);
     const section3Ref = useRef<HTMLDivElement>(null);
     const section4Ref = useRef<HTMLDivElement>(null);
+    const ballpitCardRef = useRef<HTMLDivElement>(null);
     const particleCardRef = useRef<HTMLDivElement>(null);
     const moreCardRef = useRef<HTMLDivElement>(null);
     const [scrollProgress, setScrollProgress] = useState(0);
@@ -44,6 +45,26 @@ export default function ThreeLabPage() {
         window.addEventListener('mousemove', handleMouseMove);
 
         // Animate preview cards from back to front
+        if (ballpitCardRef.current) {
+            gsap.fromTo(
+                ballpitCardRef.current,
+                { scale: 0, z: -200, opacity: 0 },
+                {
+                    scale: 1,
+                    z: 0,
+                    opacity: 1,
+                    duration: 1,
+                    ease: 'back.out(1.7)',
+                    scrollTrigger: {
+                        trigger: ballpitCardRef.current,
+                        start: 'top 80%',
+                        end: 'top 50%',
+                        scrub: 1,
+                    },
+                }
+            );
+        }
+
         if (particleCardRef.current) {
             gsap.fromTo(
                 particleCardRef.current,
@@ -214,6 +235,56 @@ export default function ThreeLabPage() {
                                 </div>
                             </Card>
                         </div>
+                    </div>
+
+                    {/* Preview Card - Ball Pit */}
+                    <div ref={ballpitCardRef} className="h-screen flex items-center justify-center px-8">
+                        <Link href="/three-lab/ballpit" className="pointer-events-auto group">
+                            <div className="relative overflow-hidden rounded-2xl border-2 border-indigo-500/30 hover:border-indigo-500/60 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-indigo-500/20" style={{ maxWidth: 480 }}>
+                                <div className="absolute inset-0 bg-linear-to-br from-slate-900 via-slate-800 to-slate-900">
+                                    <div className="absolute inset-0 opacity-40">
+                                        {[...Array(12)].map((_, i) => (
+                                            <div
+                                                key={i}
+                                                className="absolute rounded-full animate-pulse"
+                                                style={{
+                                                    width: `${20 + Math.sin(i * 1.7) * 14}px`,
+                                                    height: `${20 + Math.sin(i * 1.7) * 14}px`,
+                                                    left: `${(i * 8.3) % 90}%`,
+                                                    top: `${20 + Math.sin(i * 2.3) * 60}%`,
+                                                    background: ['#6366f1', '#8b5cf6', '#06b6d4', '#ec4899', '#10b981', '#f59e0b'][i % 6],
+                                                    filter: 'blur(4px)',
+                                                    animationDelay: `${i * 0.15}s`,
+                                                }}
+                                            />
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="relative p-8 backdrop-blur-sm">
+                                    <div className="flex items-center gap-3 mb-4">
+                                        <Zap className="w-8 h-8 text-indigo-400" />
+                                        <h3 className="text-2xl font-bold text-slate-200">Ball Pit</h3>
+                                    </div>
+                                    <p className="text-slate-300 mb-6 leading-relaxed">
+                                        Real-time physics simulation — gravity, friction, wall bounce,
+                                        and ball-to-ball collision. Move your mouse to interact.
+                                    </p>
+                                    <div className="flex gap-2 flex-wrap mb-4">
+                                        <span className="px-3 py-1 bg-indigo-500/20 text-indigo-400 rounded-full text-sm border border-indigo-500/30">Physics</span>
+                                        <span className="px-3 py-1 bg-violet-500/20 text-violet-400 rounded-full text-sm border border-violet-500/30">Interactive</span>
+                                        <span className="px-3 py-1 bg-cyan-500/20 text-cyan-400 rounded-full text-sm border border-cyan-500/30">Three.js</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-indigo-400 group-hover:gap-4 transition-all">
+                                        <span className="font-medium">Explore →</span>
+                                    </div>
+                                </div>
+
+                                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                                    <div className="absolute inset-0 bg-linear-to-r from-transparent via-indigo-500/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                                </div>
+                            </div>
+                        </Link>
                     </div>
 
                     {/* Preview Card - Particle Ring */}
