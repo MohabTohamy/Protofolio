@@ -18,21 +18,29 @@ export default function AboutPage() {
                 <Card className="mb-12 bg-linear-to-br from-primary/5 to-accent/5">
                     <div className="max-w-4xl mx-auto text-center">
                         <h2 className="text-2xl font-bold text-foreground mb-4">
-                            Building Engineering Intelligence Platforms
+                            Software Engineer. Frontend Developer. Data Automation.
                         </h2>
                         <p className="text-foreground/80 mb-4 leading-relaxed">
-                            I am Mohab Tohamy, a Software Engineer
-                            specializing in infrastructure engineering, pavement data analysis,
-                            and automation. My work combines deep engineering knowledge with
-                            modern web development to create tools that transform how
-                            engineering data is processed and visualized.
+                            I am Mohab Tohamy — a Software Engineer and Frontend Developer
+                            specializing in data automation, web application development, and
+                            server deployment. I build the tools, platforms, and pipelines that
+                            turn messy raw data into clean, actionable output for engineering teams.
+                        </p>
+                        <p className="text-foreground/80 mb-4 leading-relaxed">
+                            On the frontend, I build modern web applications and dashboards using
+                            React and Next.js, and I handle the full deployment cycle — publishing
+                            and deploying applications to production servers running IIS (Internet
+                            Information Services). I own the process from code to live, making sure
+                            everything runs correctly on the server.
                         </p>
                         <p className="text-foreground/80 leading-relaxed">
-                            I work extensively with pavement survey technologies including LCMS
-                            (Laser Crack Measurement System), CFT (Continuous Friction Tester),
-                            FWD/HWD (Falling/Heavy Weight Deflectometer), and GPR (Ground
-                            Penetrating Radar), building automation tools and web platforms that
-                            make infrastructure data accessible and actionable.
+                            On the automation side, I write Python to solve whatever data problem
+                            lands on the table — processing and validating raw output from survey
+                            machines like LCMS, building standalone EXE tools that classify files
+                            and generate Excel reports for teams, building AI-integrated desktop
+                            automation programs, and handling data splitting, format conversion,
+                            error detection, and cleanup at scale. If there is a data problem,
+                            I build the software that fixes it.
                         </p>
                     </div>
                 </Card>
@@ -52,58 +60,16 @@ export default function AboutPage() {
                             <div className="w-20 h-1 bg-linear-to-r from-red-500 to-white mx-auto rounded-full"></div>
                         </div>
 
-                        <div className="grid md:grid-cols-2 gap-6 mb-6">
-                            <div className="space-y-4">
-                                <h4 className="text-xl font-semibold text-foreground flex items-center gap-2">
-                                    <span className="text-2xl">🏔️</span>
-                                    Innovation & Quality
-                                </h4>
-                                <p className="text-foreground/80 leading-relaxed">
-                                    Austria&apos;s reputation for engineering excellence and precision aligns
-                                    perfectly with my passion for building robust, high-quality software.
-                                    The country&apos;s strong emphasis on sustainable infrastructure and digital
-                                    transformation creates exciting opportunities in my field.
-                                </p>
-                            </div>
-
-                            <div className="space-y-4">
-                                <h4 className="text-xl font-semibold text-foreground flex items-center gap-2">
-                                    <span className="text-2xl">🌍</span>
-                                    Central European Hub
-                                </h4>
-                                <p className="text-foreground/80 leading-relaxed">
-                                    Vienna and other Austrian cities serve as major tech hubs in Central Europe,
-                                    with thriving startup ecosystems and established engineering firms. The
-                                    work-life balance culture and high quality of life make it an ideal
-                                    environment for professional growth.
-                                </p>
-                            </div>
-
-                            <div className="space-y-4">
-                                <h4 className="text-xl font-semibold text-foreground flex items-center gap-2">
-                                    <span className="text-2xl">🚀</span>
-                                    Research & Development
-                                </h4>
-                                <p className="text-foreground/80 leading-relaxed">
-                                    Austria invests heavily in R&D, particularly in infrastructure technology,
-                                    automation, and smart city solutions. This creates opportunities to work
-                                    on cutting-edge projects that combine engineering with modern software
-                                    development practices.
-                                </p>
-                            </div>
-
-                            <div className="space-y-4">
-                                <h4 className="text-xl font-semibold text-foreground flex items-center gap-2">
-                                    <span className="text-2xl">🎯</span>
-                                    Career Aspirations
-                                </h4>
-                                <p className="text-foreground/80 leading-relaxed">
-                                    I&apos;m seeking to join Austrian companies working on infrastructure engineering,
-                                    GIS applications, or data-driven platforms where I can contribute my expertise
-                                    in automation, web development, and engineering analysis while growing in a
-                                    world-class engineering environment.
-                                </p>
-                            </div>
+                        <div className="text-center space-y-4 mb-6">
+                            <p className="text-foreground/80 leading-relaxed text-lg">
+                                Honestly? My best friends — the people I grew up with — are Austrian,
+                                and they are living in St. Pölten right now.
+                            </p>
+                            <p className="text-foreground/80 leading-relaxed">
+                                They have been showing me photos of the country for years and honestly
+                                it looks absolutely beautiful. We have been waiting for the chance to
+                                meet again, and Austria is where that happens. That is the real answer. 😄
+                            </p>
                         </div>
 
                         <div className="bg-card/50 rounded-lg p-6 border border-primary/20">
@@ -123,47 +89,47 @@ export default function AboutPage() {
                     <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
                         {[
                             {
-                                icon: <Wrench className="w-8 h-8 text-primary" />,
-                                title: 'Infrastructure Engineering',
-                                skills: [
-                                    'Pavement condition assessment',
-                                    'LCMS data analysis',
-                                    'CFT friction testing',
-                                    'FWD structural evaluation',
-                                    'GPR data interpretation',
-                                ],
-                            },
-                            {
-                                icon: <Database className="w-8 h-8 text-accent" />,
-                                title: 'Data Automation',
-                                skills: [
-                                    'Python scripting',
-                                    'Excel automation',
-                                    'Report generation',
-                                    'Workflow optimization',
-                                    'Data processing pipelines',
-                                ],
-                            },
-                            {
-                                icon: <Map className="w-8 h-8 text-primary" />,
-                                title: 'GIS & Geospatial',
-                                skills: [
-                                    'Coordinate processing',
-                                    'Spatial analysis',
-                                    'QGIS & GeoPandas',
-                                    'Map visualization',
-                                    'Data matching',
-                                ],
-                            },
-                            {
-                                icon: <Code className="w-8 h-8 text-accent" />,
+                                icon: <Code className="w-8 h-8 text-primary" />,
                                 title: 'Frontend Development',
                                 skills: [
                                     'React & Next.js',
                                     'TypeScript',
-                                    'Data visualization',
+                                    'Tailwind CSS',
                                     'Interactive dashboards',
-                                    '3D graphics',
+                                    '3D graphics with Three.js',
+                                ],
+                            },
+                            {
+                                icon: <Database className="w-8 h-8 text-accent" />,
+                                title: 'Python & Automation',
+                                skills: [
+                                    'Data processing & validation',
+                                    'EXE desktop tools (PyInstaller)',
+                                    'Excel automation (OpenPyXL)',
+                                    'AI-integrated automation',
+                                    'Batch file processing',
+                                ],
+                            },
+                            {
+                                icon: <Wrench className="w-8 h-8 text-primary" />,
+                                title: 'Deployment & Server',
+                                skills: [
+                                    'IIS server deployment',
+                                    'Application publishing',
+                                    'Production environment setup',
+                                    'Build & release management',
+                                    'AWS (familiar)',
+                                ],
+                            },
+                            {
+                                icon: <Map className="w-8 h-8 text-accent" />,
+                                title: 'Data & GIS',
+                                skills: [
+                                    'Map visualization',
+                                    'Pandas & NumPy',
+                                    'GeoJSON & Shapefiles',
+                                    'GeoPandas & QGIS & ArcGIS',
+                                    'Format conversion & cleaning',
                                 ],
                             },
                         ].map((competency, index) => (

@@ -14,9 +14,10 @@ export default function ContactPage() {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        // In production, this would send the form data to an API
-        console.log('Form submitted:', formData);
-        alert('Thank you for your message! I will get back to you soon.');
+        const { name, email, subject, message } = formData;
+        const body = `Name: ${name}\nEmail: ${email}\n\n${message}`;
+        const mailtoLink = `mailto:MohabTohamyAbdallah@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        window.location.href = mailtoLink;
         setFormData({ name: '', email: '', subject: '', message: '' });
     };
 
@@ -41,14 +42,14 @@ export default function ContactPage() {
                                 Contact Information
                             </h3>
                             <p className="text-foreground/70 mb-6">
-                                I&apos;m actively seeking opportunities with Austrian companies in infrastructure
-                                engineering, GIS solutions, or software development. Let&apos;s connect to discuss
-                                how I can contribute to your team.
+                                I&apos;m a Frontend &amp; Software Engineer open to new opportunities in Austria.
+                                Whether it&apos;s frontend development, automation tooling, or full-stack work —
+                                feel free to reach out and let&apos;s talk.
                             </p>
 
                             <div className="space-y-4">
                                 <a
-                                    href="mailto:mohab@example.com"
+                                    href="mailto:MohabTohamyAbdallah@gmail.com"
                                     className="flex items-center gap-4 p-4 rounded-lg hover:bg-card transition-colors group"
                                 >
                                     <div className="w-12 h-12 rounded-lg bg-primary/20 flex items-center justify-center group-hover:bg-primary/30 transition-colors">
@@ -57,13 +58,13 @@ export default function ContactPage() {
                                     <div>
                                         <p className="text-sm text-foreground/70">Email</p>
                                         <p className="text-foreground font-medium">
-                                            mohab@example.com
+                                            MohabTohamyAbdallah@gmail.com
                                         </p>
                                     </div>
                                 </a>
 
                                 <a
-                                    href="https://github.com/mohab"
+                                    href="https://github.com/MohabTohamy"
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="flex items-center gap-4 p-4 rounded-lg hover:bg-card transition-colors group"
@@ -74,13 +75,13 @@ export default function ContactPage() {
                                     <div>
                                         <p className="text-sm text-foreground/70">GitHub</p>
                                         <p className="text-foreground font-medium">
-                                            github.com/mohab
+                                            github.com/MohabTohamy
                                         </p>
                                     </div>
                                 </a>
 
                                 <a
-                                    href="https://linkedin.com/in/mohab"
+                                    href="https://www.linkedin.com/in/mohab-tohamy/"
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="flex items-center gap-4 p-4 rounded-lg hover:bg-card transition-colors group"
@@ -91,7 +92,7 @@ export default function ContactPage() {
                                     <div>
                                         <p className="text-sm text-foreground/70">LinkedIn</p>
                                         <p className="text-foreground font-medium">
-                                            linkedin.com/in/mohab
+                                            linkedin.com/in/mohab-tohamy
                                         </p>
                                     </div>
                                 </a>
@@ -103,10 +104,10 @@ export default function ContactPage() {
                                     <div>
                                         <p className="text-sm text-foreground/70">Current Location</p>
                                         <p className="text-foreground font-medium">
-                                            Cairo, Egypt
+                                            Riyadh, Saudi Arabia
                                         </p>
                                         <p className="text-xs text-accent font-medium mt-1">
-                                            🇦🇹 Targeting: Austria (Vienna, Graz, Linz)
+                                            🇦🇹 Targeting: Austria (St. Pölten, Vienna, Linz)
                                         </p>
                                     </div>
                                 </div>
@@ -119,24 +120,24 @@ export default function ContactPage() {
                                 🇦🇹 Seeking Full-Time Opportunities in Austria
                             </h4>
                             <p className="text-foreground/70 mb-4">
-                                I&apos;m specifically interested in positions with Austrian companies in:
+                                I&apos;m interested in positions involving:
                             </p>
                             <ul className="space-y-2 text-foreground/80">
                                 <li className="flex items-start gap-2">
                                     <span className="text-primary mt-1">✓</span>
-                                    Software Engineering (Full-stack)
+                                    Frontend Development (React, Next.js, TypeScript)
                                 </li>
                                 <li className="flex items-start gap-2">
                                     <span className="text-accent mt-1">✓</span>
-                                    GIS & Mapping Technology
+                                    Full-Stack Web Applications
                                 </li>
                                 <li className="flex items-start gap-2">
                                     <span className="text-primary mt-1">✓</span>
-                                    Infrastructure Engineering Platforms
+                                    Python Automation & Data Tools
                                 </li>
                                 <li className="flex items-start gap-2">
                                     <span className="text-accent mt-1">✓</span>
-                                    Data Automation & Analysis
+                                    Software Engineering roles in any domain
                                 </li>
                             </ul>
                             <div className="mt-4 pt-4 border-t border-foreground/10">

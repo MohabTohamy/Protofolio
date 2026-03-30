@@ -239,9 +239,9 @@ export default function HomePage() {
                 title: 'Target Companies',
                 items: [
                   'Engineering Software Development',
-                  'Infrastructure & Civil Engineering Firms',
-                  'GIS & Mapping Technology Companies',
-                  'Smart City & IoT Solutions Providers',
+                  'SaaS & Web Application Companies',
+                  'Tech Startups & Scale-ups',
+                  'Digital Product & UX-focused Agencies',
                 ]
               },
               {
@@ -249,9 +249,9 @@ export default function HomePage() {
                 title: 'What I Bring',
                 items: [
                   'Frontend development expertise',
-                  'Infrastructure engineering knowledge',
-                  'Data automation & processing skills',
-                  'GIS & geospatial analysis experience',
+                  'React, Next.js & TypeScript proficiency',
+                  'UI/UX implementation & design systems',
+                  'Performance optimization & accessibility',
                 ]
               },
               {
@@ -259,8 +259,7 @@ export default function HomePage() {
                 title: 'Ideal Roles',
                 items: [
                   'Software Engineer (Frontend)',
-                  'GIS Application Developer',
-                  'Engineering Platform Developer',
+                  'UI Engineer / Web Developer',
                 ]
               },
             ].map((section, index) => (
