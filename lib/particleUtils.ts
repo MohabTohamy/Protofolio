@@ -1,33 +1,24 @@
-// Generate particles distributed in 3D sphere volume (not just surface)
-const generateSpherePoints = (count: number) => {
-    const points = [];
-    const colors = ['#06b6d4', '#2563eb', '#8b5cf6']; // cyan, blue, purple
+const randFloat = (min: number, max: number) => Math.random() * (max - min) + min;
 
-    for (let i = 0; i < count; i++) {
-        // Fibonacci sphere for even surface distribution
-        const phi = Math.acos(1 - 2 * (i + 0.5) / count);
-        const theta = Math.PI * (1 + Math.sqrt(5)) * i;
+const makeRing = (
+    count: number,
+    radius: number,
+    spread: number,
+    colors: string[]
+) =>
+    Array.from({ length: count }, (_, idx) => {
+        const angle = Math.random() * Math.PI * 2;
+        const r = radius + (Math.random() - 0.5) * spread;
+        return {
+            idx,
+            position: [
+                Math.cos(angle) * r,
+                Math.sin(angle) * r,
+                randFloat(-0.5, 0.5),
+            ] as [number, number, number],
+            color: colors[Math.floor(Math.random() * colors.length)],
+        };
+    });
 
-        // Random radius for volumetric distribution (not just surface)
-        const r = 2.5 + Math.random() * 2.5; // radius between 2.5 and 5
-
-        const x = r * Math.sin(phi) * Math.cos(theta);
-        const y = r * Math.sin(phi) * Math.sin(theta);
-        const z = r * Math.cos(phi);
-
-        points.push({
-            idx: `point-${i}`,
-            position: [x, y, z] as [number, number, number],
-            color: colors[Math.floor(Math.random() * colors.length)]
-        });
-    }
-
-    return points;
-};
-
-// Generate a single large set of particles
-const allPoints = generateSpherePoints(1200);
-
-// Split into two arrays for compatibility
-export const pointsInner = allPoints.slice(0, 600);
-export const pointsOuter = allPoints.slice(600);
+export const pointsInner = makeRing(750, 4, 1.5, ['#22d3ee', '#06b6d4', '#0891b2', '#67e8f9']);
+export const pointsOuter = makeRing(750, 7.5, 1.5, ['#3b82f6', '#2563eb', '#60a5fa', '#818cf8']);

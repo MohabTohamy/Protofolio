@@ -1,756 +1,471 @@
-'use client';
+﻿'use client';
 
-import { Suspense, useRef, useEffect, useState } from 'react';
-import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { OrbitControls } from '@react-three/drei';
-import { Section, SectionTitle, Card } from '@/components/UI';
-import { BoxSelect, Layers as LayersIcon, ChevronDown, Rocket, Sparkles, Zap } from 'lucide-react';
-import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
-if (typeof window !== 'undefined') {
-    gsap.registerPlugin(ScrollTrigger);
-}
+// ─── GLSL shaders (inlined) ─────────────────────────────────────────────────
+
+const BG_VERTEX = `
+  varying vec2 vUv;
+  void main() {
+    vUv = uv;
+    gl_Position = vec4(position.xy, 0.0, 1.0);
+  }
+`;
+
+const BG_FRAGMENT = `
+  varying vec2 vUv;
+
+  uniform vec3  uBackgroundColor;
+  uniform vec3  uBlob1Color;
+  uniform vec3  uBlob2Color;
+  uniform float uNoiseStrength;
+  uniform float uBlobRadius;
+  uniform float uBlobRadiusSecondary;
+  uniform float uBlobStrength;
+  uniform float uTime;
+  uniform float uVelocityIntensity;
+
+  float random(vec2 c) {
+    return fract(sin(dot(c, vec2(12.9898, 78.233))) * 43758.5453123);
+  }
+
+  void main() {
+    vec3 color = uBackgroundColor;
+    float t = uTime * 0.00028;
+    vec2 b1 = vec2(
+      0.50 + sin(t * 1.000) * 0.13 + sin(t * 1.618) * 0.05,
+      0.48 + cos(t * 0.794) * 0.09 + cos(t * 1.272) * 0.03
+    );
+    vec2 b2 = vec2(
+      0.35 + cos(t * 0.927) * 0.11 + cos(t * 1.414) * 0.04,
+      0.55 + sin(t * 1.175) * 0.07 + sin(t * 0.618) * 0.03
+    );
+    float blob1 = smoothstep(uBlobRadius,          0.0, distance(vUv, b1));
+    float blob2 = smoothstep(uBlobRadiusSecondary, 0.0, distance(vUv, b2));
+    vec3 s1 = mix(uBlob1Color, uBackgroundColor, 0.35);
+    vec3 s2 = mix(uBlob2Color, uBackgroundColor, 0.35);
+    color = mix(color, s1, blob1 * uBlobStrength);
+    color = mix(color, s2, blob2 * uBlobStrength);
+    color += uVelocityIntensity * 0.10;
+    float grain = random(vUv * vec2(1387.13, 947.91)) - 0.5;
+    color += grain * uNoiseStrength;
+    color  = clamp(color, 0.0, 1.0);
+    gl_FragColor = vec4(color, 1.0);
+  }
+`;
+
+// ─── Gallery data ────────────────────────────────────────────────────────────
+
+const GALLERY_DATA = [
+    {
+        color: '#6366f1',
+        backgroundColor: '#06061a',
+        blob1Color: '#312e81',
+        blob2Color: '#0891b2',
+        position: { x: -0.8, y: 0 },
+        label: { word: 'Ball Pit', sub: 'Physics Simulation', textColor: '#c7d2fe' },
+        href: '/three-lab/ballpit',
+    },
+    {
+        color: '#0ea5e9',
+        backgroundColor: '#03111f',
+        blob1Color: '#0369a1',
+        blob2Color: '#6d28d9',
+        position: { x: 0.8, y: 0 },
+        label: { word: 'Particle Ring', sub: 'Interactive Orbits', textColor: '#bae6fd' },
+        href: '/three-lab/particle-ring',
+    },
+    {
+        color: '#a855f7',
+        backgroundColor: '#0d0318',
+        blob1Color: '#6b21a8',
+        blob2Color: '#db2777',
+        position: { x: -0.5, y: 0 },
+        label: { word: 'Dashboard', sub: 'Holographic 3D', textColor: '#e9d5ff' },
+        href: '/three-lab/futuristic-dashboard',
+    },
+] as const;
+
+// ─── Component ───────────────────────────────────────────────────────────────
 
 export default function ThreeLabPage() {
-    const canvasRef = useRef<HTMLDivElement>(null);
-    const section1Ref = useRef<HTMLDivElement>(null);
-    const section2Ref = useRef<HTMLDivElement>(null);
-    const section3Ref = useRef<HTMLDivElement>(null);
-    const section4Ref = useRef<HTMLDivElement>(null);
-    const ballpitCardRef = useRef<HTMLDivElement>(null);
-    const particleCardRef = useRef<HTMLDivElement>(null);
-    const moreCardRef = useRef<HTMLDivElement>(null);
-    const [scrollProgress, setScrollProgress] = useState(0);
-    const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+    const canvasRef = useRef<HTMLCanvasElement>(null);
+    const labelRef = useRef<HTMLDivElement>(null);
+    const hrefRef = useRef<string>('');
+    const router = useRouter();
 
     useEffect(() => {
-        const handleScroll = () => {
-            const scrollTop = window.scrollY;
-            const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-            const progress = (scrollTop / docHeight) * 100;
-            setScrollProgress(progress);
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+
+        // Renderer
+        const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.outputColorSpace = THREE.SRGBColorSpace;
+        renderer.autoClear = false;
+
+        // Camera + scene
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
+        camera.position.set(0, 0, 6);
+
+        // Background quad
+        const bgScene = new THREE.Scene();
+        const bgCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+        const bgMaterial = new THREE.ShaderMaterial({
+            vertexShader: BG_VERTEX,
+            fragmentShader: BG_FRAGMENT,
+            depthWrite: false,
+            depthTest: false,
+            uniforms: {
+                uBackgroundColor: { value: new THREE.Color(GALLERY_DATA[0].backgroundColor) },
+                uBlob1Color: { value: new THREE.Color(GALLERY_DATA[0].blob1Color) },
+                uBlob2Color: { value: new THREE.Color(GALLERY_DATA[0].blob2Color) },
+                uNoiseStrength: { value: 0.04 },
+                uBlobRadius: { value: 0.65 },
+                uBlobRadiusSecondary: { value: 0.65 * 0.78 },
+                uBlobStrength: { value: 0.9 },
+                uTime: { value: 0 },
+                uVelocityIntensity: { value: 0 },
+            },
+        });
+        bgScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), bgMaterial));
+
+        // Planes
+        const PLANE_GAP = 5;
+        const planeGeo = new THREE.PlaneGeometry(3, 3);
+        const planes: THREE.Mesh[] = [];
+
+        GALLERY_DATA.forEach((entry, i) => {
+            const mat = new THREE.MeshBasicMaterial({
+                color: new THREE.Color(entry.color),
+                side: THREE.DoubleSide,
+                transparent: true,
+                depthWrite: false,
+                opacity: i === 0 ? 1 : 0,
+            });
+            const mesh = new THREE.Mesh(planeGeo, mat);
+            mesh.position.set(entry.position.x, entry.position.y, -i * PLANE_GAP);
+            mesh.userData.basePosition = entry.position;
+            scene.add(mesh);
+            planes.push(mesh);
+        });
+
+        // Scroll
+        let scrollTarget = 0;
+        let scrollCurrent = 0;
+        let prevScroll = 0;
+        let velocity = 0;
+
+        const SCROLL_SMOOTH = 0.08;
+        const SCROLL_TO_WORLD = 0.01;
+        const VEL_DAMP = 0.12;
+        const VEL_MAX = 1.5;
+
+        const maxCamZ = 5;
+        const minCamZ = -(planes.length - 1) * PLANE_GAP + 5;
+        const startCamZ = maxCamZ;
+        camera.position.z = startCamZ;
+
+        const camZFromScroll = (s: number) => startCamZ - s * SCROLL_TO_WORLD;
+        const scrollFromCamZ = (z: number) => (startCamZ - z) / SCROLL_TO_WORLD;
+
+        const clampScroll = () => {
+            const lo = scrollFromCamZ(maxCamZ);
+            const hi = scrollFromCamZ(minCamZ);
+            scrollTarget = THREE.MathUtils.clamp(scrollTarget, lo, hi);
+            scrollCurrent = THREE.MathUtils.clamp(scrollCurrent, lo, hi);
         };
 
-        const handleMouseMove = (e: MouseEvent) => {
-            setMousePosition({
-                x: (e.clientX / window.innerWidth - 0.5) * 30,
-                y: (e.clientY / window.innerHeight - 0.5) * 30,
+        let touchY = 0;
+        const normWheel = (e: WheelEvent) => e.deltaMode === 1 ? e.deltaY * 16 : e.deltaMode === 2 ? e.deltaY * window.innerHeight : e.deltaY;
+        const onWheel = (e: WheelEvent) => { e.preventDefault(); scrollTarget += normWheel(e); clampScroll(); };
+        const onTouchStart = (e: TouchEvent) => { touchY = e.touches[0]?.clientY ?? 0; };
+        const onTouchMove = (e: TouchEvent) => {
+            e.preventDefault();
+            const cy = e.touches[0]?.clientY ?? touchY;
+            scrollTarget += (touchY - cy) * 1.8;
+            clampScroll();
+            touchY = cy;
+        };
+
+        canvas.addEventListener('wheel', onWheel, { passive: false });
+        canvas.addEventListener('touchstart', onTouchStart, { passive: true });
+        canvas.addEventListener('touchmove', onTouchMove, { passive: false });
+
+        // Click to navigate
+        const onClick = () => { if (hrefRef.current) router.push(hrefRef.current); };
+        canvas.addEventListener('click', onClick);
+
+        // Pointer parallax
+        const ptrTarget = new THREE.Vector2(0, 0);
+        const ptrCurrent = new THREE.Vector2(0, 0);
+        const onPtrMove = (e: PointerEvent) => ptrTarget.set(
+            (e.clientX / window.innerWidth) * 2 - 1,
+            -((e.clientY / window.innerHeight) * 2 - 1),
+        );
+        const onPtrLeave = () => ptrTarget.set(0, 0);
+        window.addEventListener('pointermove', onPtrMove, { passive: true });
+        window.addEventListener('pointerleave', onPtrLeave, { passive: true });
+
+        let breath = 0, targetBreath = 0;
+        let driftCurrent = 0, driftTarget = 0;
+
+        // Mood colours
+        const currBg = new THREE.Color(), currB1 = new THREE.Color(), currB2 = new THREE.Color();
+        const nextBg = new THREE.Color(), nextB1 = new THREE.Color(), nextB2 = new THREE.Color();
+
+        const moodBlend = (camZ: number) => {
+            const sampled = camZ - PLANE_GAP;
+            const norm = THREE.MathUtils.clamp((planes[0].position.z - sampled) / PLANE_GAP, 0, planes.length - 1);
+            const idx = Math.floor(norm);
+            const nextIdx = Math.min(idx + 1, planes.length - 1);
+            return { idx, nextIdx, blend: norm - idx };
+        };
+
+        const updateMood = (camZ: number) => {
+            const { idx, nextIdx, blend } = moodBlend(camZ);
+            const c = GALLERY_DATA[idx], n = GALLERY_DATA[nextIdx];
+            currBg.set(c.backgroundColor).lerp(nextBg.set(n.backgroundColor), blend);
+            currB1.set(c.blob1Color).lerp(nextB1.set(n.blob1Color), blend);
+            currB2.set(c.blob2Color).lerp(nextB2.set(n.blob2Color), blend);
+            bgMaterial.uniforms.uBackgroundColor.value.copy(currBg);
+            bgMaterial.uniforms.uBlob1Color.value.copy(currB1);
+            bgMaterial.uniforms.uBlob2Color.value.copy(currB2);
+        };
+
+        const updateFade = (camZ: number) => {
+            const sampled = camZ - PLANE_GAP;
+            const norm = THREE.MathUtils.clamp((planes[0].position.z - sampled) / PLANE_GAP, 0, planes.length - 1);
+            const idx = Math.floor(norm);
+            const nextIdx = Math.min(idx + 1, planes.length - 1);
+            const blend = norm - idx;
+            planes.forEach((p, i) => {
+                let target = 0;
+                if (i === idx) target = 1 - blend;
+                if (i === nextIdx) target = Math.max(target, blend);
+                const mat = p.material as THREE.MeshBasicMaterial;
+                mat.opacity = THREE.MathUtils.lerp(mat.opacity, target, 0.14);
             });
         };
 
-        window.addEventListener('scroll', handleScroll);
-        window.addEventListener('mousemove', handleMouseMove);
+        const getActiveIdx = (camZ: number) => {
+            const norm = THREE.MathUtils.clamp((planes[0].position.z - camZ) / PLANE_GAP, 0, planes.length - 1);
+            const idx = Math.floor(norm);
+            const blend = norm - idx;
+            return blend >= 0.5 ? Math.min(idx + 1, planes.length - 1) : idx;
+        };
 
-        // Animate preview cards from back to front
-        if (ballpitCardRef.current) {
-            gsap.fromTo(
-                ballpitCardRef.current,
-                { scale: 0, z: -200, opacity: 0 },
-                {
-                    scale: 1,
-                    z: 0,
-                    opacity: 1,
-                    duration: 1,
-                    ease: 'back.out(1.7)',
-                    scrollTrigger: {
-                        trigger: ballpitCardRef.current,
-                        start: 'top 80%',
-                        end: 'top 50%',
-                        scrub: 1,
-                    },
-                }
-            );
-        }
+        // Resize
+        const resize = () => {
+            const w = canvas.clientWidth || window.innerWidth;
+            const h = canvas.clientHeight || window.innerHeight;
+            camera.aspect = w / h;
+            camera.updateProjectionMatrix();
+            renderer.setSize(w, h, false);
+        };
+        resize();
+        window.addEventListener('resize', resize);
 
-        if (particleCardRef.current) {
-            gsap.fromTo(
-                particleCardRef.current,
-                {
-                    scale: 0,
-                    z: -200,
-                    opacity: 0,
-                },
-                {
-                    scale: 1,
-                    z: 0,
-                    opacity: 1,
-                    duration: 1,
-                    ease: 'back.out(1.7)',
-                    scrollTrigger: {
-                        trigger: particleCardRef.current,
-                        start: 'top 80%',
-                        end: 'top 50%',
-                        scrub: 1,
-                    },
-                }
-            );
-        }
+        // DOM label refs (set once – elements already in DOM via React)
+        const wordEl = labelRef.current?.querySelector<HTMLElement>('[data-word]');
+        const subEl = labelRef.current?.querySelector<HTMLElement>('[data-sub]');
+        const chipEl = labelRef.current?.querySelector<HTMLElement>('[data-chip]');
+        const idxEl = labelRef.current?.querySelector<HTMLElement>('[data-index]');
+        let prevActive = -1;
 
-        if (moreCardRef.current) {
-            gsap.fromTo(
-                moreCardRef.current,
-                {
-                    scale: 0,
-                    z: -200,
-                    opacity: 0,
-                },
-                {
-                    scale: 1,
-                    z: 0,
-                    opacity: 1,
-                    duration: 1,
-                    ease: 'back.out(1.7)',
-                    scrollTrigger: {
-                        trigger: moreCardRef.current,
-                        start: 'top 80%',
-                        end: 'top 50%',
-                        scrub: 1,
-                    },
-                }
-            );
-        }
+        // Animate
+        let raf: number;
+        let smoothDepth = 0, smoothVel = 0;
+
+        const animate = () => {
+            raf = requestAnimationFrame(animate);
+
+            // scroll physics
+            scrollCurrent = THREE.MathUtils.lerp(scrollCurrent, scrollTarget, SCROLL_SMOOTH);
+            clampScroll();
+            const rawVel = scrollCurrent - prevScroll;
+            velocity = THREE.MathUtils.lerp(velocity, rawVel, VEL_DAMP);
+            velocity = THREE.MathUtils.clamp(velocity, -VEL_MAX, VEL_MAX);
+            if (Math.abs(velocity) < 0.0001) velocity = 0;
+            prevScroll = scrollCurrent;
+
+            camera.position.z = THREE.MathUtils.clamp(camZFromScroll(scrollCurrent), minCamZ, maxCamZ);
+
+            // depth/vel smoothing
+            const velInt = THREE.MathUtils.clamp(Math.abs(velocity) / VEL_MAX, 0, 1);
+            const depthPrg = THREE.MathUtils.clamp((maxCamZ - camera.position.z) / (maxCamZ - minCamZ), 0, 1);
+            smoothDepth = THREE.MathUtils.lerp(smoothDepth, depthPrg, 0.1);
+            smoothVel = THREE.MathUtils.lerp(smoothVel, velInt, 0.1);
+
+            // background
+            const blobR = THREE.MathUtils.clamp(0.65 + smoothDepth * 0.08, 0.05, 1);
+            const blobS = THREE.MathUtils.clamp(0.9 + smoothVel * 0.10, 0, 1);
+            bgMaterial.uniforms.uBlobRadius.value = blobR;
+            bgMaterial.uniforms.uBlobRadiusSecondary.value = blobR * 0.78;
+            bgMaterial.uniforms.uBlobStrength.value = blobS;
+            bgMaterial.uniforms.uTime.value = performance.now();
+            bgMaterial.uniforms.uVelocityIntensity.value = smoothVel;
+
+            updateMood(camera.position.z);
+            updateFade(camera.position.z);
+
+            // parallax + breath
+            ptrCurrent.lerp(ptrTarget, 0.08);
+            const velNorm = THREE.MathUtils.clamp(Math.abs(velocity) / VEL_MAX, 0, 1);
+            targetBreath = THREE.MathUtils.clamp(velNorm * 1.1, 0, 1);
+            breath = THREE.MathUtils.lerp(breath, targetBreath, 0.14);
+            driftTarget = THREE.MathUtils.clamp(velocity / VEL_MAX, -1, 1);
+            driftCurrent = THREE.MathUtils.lerp(driftCurrent, driftTarget, 0.05);
+
+            const isMobile = window.innerWidth <= 768;
+            planes.forEach((p, i) => {
+                const op = (p.material as THREE.MeshBasicMaterial).opacity;
+                const base = p.userData.basePosition as { x: number; y: number };
+                const dep = 1 + i * 0.05;
+                const par = op * dep;
+                const br = breath * op;
+
+                p.position.x = base.x + ptrCurrent.x * 0.16 * par;
+                p.position.y = base.y + ptrCurrent.y * 0.08 * par + driftCurrent * 0.05;
+                p.position.z = -i * PLANE_GAP;
+                p.rotation.x = -ptrCurrent.y * 0.045 * br;
+                p.rotation.y = ptrCurrent.x * 0.045 * br;
+
+                const baseScale = isMobile ? 0.65 : 1.0;
+                const pulse = 1 + 0.03 * br;
+                p.scale.set(baseScale * pulse, baseScale * pulse, 1);
+            });
+
+            // label
+            const active = getActiveIdx(camera.position.z);
+            if (active !== prevActive && labelRef.current) {
+                const d = GALLERY_DATA[active];
+                if (wordEl) wordEl.textContent = d.label.word;
+                if (subEl) subEl.textContent = d.label.sub;
+                if (chipEl) chipEl.style.backgroundColor = d.color;
+                if (idxEl) idxEl.textContent = String(active + 1).padStart(2, '0');
+                labelRef.current.style.color = d.label.textColor;
+                labelRef.current.style.opacity = '1';
+                hrefRef.current = d.href;
+                prevActive = active;
+            }
+
+            // draw
+            renderer.clear(true, true, true);
+            renderer.render(bgScene, bgCamera);
+            renderer.clearDepth();
+            renderer.render(scene, camera);
+        };
+
+        animate();
 
         return () => {
-            window.removeEventListener('scroll', handleScroll);
-            window.removeEventListener('mousemove', handleMouseMove);
-            ScrollTrigger.getAll().forEach(trigger => trigger.kill());
+            cancelAnimationFrame(raf);
+            canvas.removeEventListener('wheel', onWheel);
+            canvas.removeEventListener('touchstart', onTouchStart);
+            canvas.removeEventListener('touchmove', onTouchMove);
+            canvas.removeEventListener('click', onClick);
+            window.removeEventListener('pointermove', onPtrMove);
+            window.removeEventListener('pointerleave', onPtrLeave);
+            window.removeEventListener('resize', resize);
+            renderer.dispose();
+            bgMaterial.dispose();
+            planeGeo.dispose();
+            planes.forEach(p => (p.material as THREE.MeshBasicMaterial).dispose());
         };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     return (
-        <div className="min-h-screen relative">
-            {/* Scroll Progress Rocket */}
-            <div className="fixed right-8 top-1/2 -translate-y-1/2 z-50 flex flex-col items-center gap-2">
-                <div className="relative h-64 w-1 bg-slate-700 rounded-full overflow-hidden">
-                    <div
-                        className="absolute bottom-0 left-0 right-0 bg-linear-to-t from-cyan-500 to-blue-500 transition-all duration-300"
-                        style={{ height: `${scrollProgress}%` }}
+        <>
+            {/* Canvas — fixed/full-viewport so it ignores the layout padding */}
+            <canvas
+                ref={canvasRef}
+                style={{
+                    position: 'fixed',
+                    inset: 0,
+                    width: '100%',
+                    height: '100%',
+                    display: 'block',
+                    touchAction: 'none',
+                    zIndex: 0,
+                    cursor: 'pointer',
+                }}
+            />
+
+            {/* Back link */}
+            <Link
+                href="/"
+                className="fixed top-20 left-6 z-50 text-[10px] uppercase tracking-widest opacity-60 hover:opacity-100 transition-opacity"
+                style={{ fontFamily: 'monospace', color: 'inherit' }}
+            >
+                ← Home
+            </Link>
+
+            {/* Compare banner */}
+            <div className="fixed top-20 right-6 z-50 flex items-center gap-2" style={{ fontFamily: 'monospace' }}>
+                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                <Link
+                    href="/three-lab/classic"
+                    className="text-[10px] uppercase tracking-widest opacity-50 hover:opacity-100 transition-opacity"
+                    style={{ color: 'inherit' }}
+                >
+                    Classic version →
+                </Link>
+            </div>
+
+            {/* Page title */}
+            <p
+                className="fixed top-20 left-1/2 -translate-x-1/2 z-50 text-[10px] uppercase tracking-widest opacity-50 whitespace-nowrap"
+                style={{ fontFamily: 'monospace' }}
+            >
+                3D Engineering Lab
+            </p>
+
+            {/* Scroll hint */}
+            <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-2 animate-bounce pointer-events-none">
+                <span className="text-[9px] uppercase tracking-widest opacity-50" style={{ fontFamily: 'monospace' }}>
+                    Scroll to explore
+                </span>
+                <svg width="10" height="16" viewBox="0 0 10 16" fill="none" className="opacity-40">
+                    <path d="M5 0v16M1 11l4 5 4-5" stroke="currentColor" strokeWidth="1.2" />
+                </svg>
+            </div>
+
+            {/* Click hint */}
+            <p
+                className="fixed bottom-10 right-6 z-50 text-[9px] uppercase tracking-widest opacity-40 pointer-events-none"
+                style={{ fontFamily: 'monospace' }}
+            >
+                Click to enter
+            </p>
+
+            {/* Label overlay — updated per-frame via DOM refs */}
+            <div
+                ref={labelRef}
+                className="fixed inset-0 z-40 pointer-events-none transition-[opacity,color] duration-300"
+                style={{ opacity: 0, fontFamily: 'monospace' }}
+            >
+                {/* Left: index + name + colour chip */}
+                <div className="absolute left-[clamp(2.5rem,8vw,10rem)] top-1/2 flex flex-col gap-3">
+                    <p data-index className="text-[9px] uppercase tracking-widest opacity-60 m-0" />
+                    <p data-word className="text-[clamp(10px,1vw,14px)] uppercase tracking-[0.12em] font-semibold m-0" />
+                    <span
+                        data-chip
+                        className="w-4 h-4 rounded-full inline-block"
+                        style={{ boxShadow: '0 0 0 1px rgba(255,255,255,0.2)' }}
                     />
                 </div>
-                <div
-                    className="absolute transition-all duration-300"
-                    style={{
-                        top: `calc(${scrollProgress}% - 12px)`,
-                        transform: 'translateY(-50%)'
-                    }}
-                >
-                    <Rocket className="w-6 h-6 text-cyan-400 rotate-180" />
-                </div>
-                <span className="text-xs text-slate-400 font-mono">{Math.round(scrollProgress)}%</span>
-            </div>
 
-            {/* Hero Section with Scroll Indicator */}
-            <Section className="min-h-screen flex items-center justify-center relative overflow-hidden">
-                {/* Parallax Background */}
-                <div
-                    className="absolute inset-0 transition-transform duration-300 ease-out"
-                    style={{
-                        transform: `translate(${mousePosition.x}px, ${mousePosition.y}px)`,
-                    }}
-                >
-                    <div className="absolute inset-0 opacity-20">
-                        <div className="absolute top-20 left-10 w-72 h-72 bg-primary rounded-full blur-3xl animate-pulse" />
-                        <div className="absolute bottom-20 right-10 w-96 h-96 bg-accent rounded-full blur-3xl animate-pulse delay-75" />
-                        <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-purple-500 rounded-full blur-3xl animate-pulse delay-150" />
-                    </div>
-                </div>
-
-                <div className="text-center relative z-10">
-                    <SectionTitle subtitle="Scroll-based 3D visualization and engineering simulations">
-                        3D Engineering Lab
-                    </SectionTitle>
-                    <p className="text-foreground/60 text-lg mb-8 max-w-2xl mx-auto">
-                        Experience interactive 3D engineering visualizations with scroll-triggered animations
-                    </p>
-                    <div className="flex flex-col items-center gap-2 animate-bounce">
-                        <span className="text-sm text-foreground/50">Scroll to explore</span>
-                        <ChevronDown className="w-6 h-6 text-primary" />
-                    </div>
-                </div>
-            </Section>
-
-            {/* Scroll-Driven 3D Experience */}
-            <div className="relative">
-                {/* Fixed Canvas */}
-                <div ref={canvasRef} className="sticky top-0 h-screen w-full">
-                    <Canvas camera={{ position: [0, 0, 8], fov: 50 }}>
-                        <Suspense fallback={null}>
-                            <ambientLight intensity={0.5} />
-                            <spotLight position={[10, 10, 10]} angle={0.3} penumbra={1} intensity={1} />
-                            <pointLight position={[-10, -10, -10]} intensity={0.5} />
-                            <ScrollScene
-                                section1Ref={section1Ref}
-                                section2Ref={section2Ref}
-                                section3Ref={section3Ref}
-                                section4Ref={section4Ref}
-                            />
-                        </Suspense>
-                    </Canvas>
-                </div>
-
-                {/* Scroll Content Sections */}
-                <div className="relative pointer-events-none">
-                    {/* Section 1: Introduction */}
-                    <div ref={section1Ref} className="h-screen flex items-center justify-end px-8 md:px-16">
-                        <div className="max-w-md pointer-events-auto">
-                            <Card className="bg-background/90 backdrop-blur-lg border-2 border-primary/30">
-                                <div className="flex items-center gap-2 mb-4">
-                                    <BoxSelect className="w-6 h-6 text-primary" />
-                                    <h3 className="text-2xl font-bold text-foreground">
-                                        Interactive 3D Objects
-                                    </h3>
-                                </div>
-                                <p className="text-foreground/80 leading-relaxed">
-                                    Explore engineering concepts through interactive 3D visualizations.
-                                    Watch as objects transform and animate based on your scroll position.
-                                </p>
-                            </Card>
-                        </div>
-                    </div>
-
-                    {/* Section 2: Rotation */}
-                    <div ref={section2Ref} className="h-screen flex items-center justify-start px-8 md:px-16">
-                        <div className="max-w-md pointer-events-auto">
-                            <Card className="bg-background/90 backdrop-blur-lg border-2 border-accent/30">
-                                <h3 className="text-2xl font-bold text-foreground mb-4">
-                                    Dynamic Transformations
-                                </h3>
-                                <p className="text-foreground/80 leading-relaxed mb-4">
-                                    The cube rotates and scales as you scroll, demonstrating
-                                    real-time 3D transformations and animations.
-                                </p>
-                                <div className="flex gap-2 flex-wrap">
-                                    <span className="px-3 py-1 bg-primary/20 text-primary rounded-full text-sm">
-                                        Rotation
-                                    </span>
-                                    <span className="px-3 py-1 bg-accent/20 text-accent rounded-full text-sm">
-                                        Scaling
-                                    </span>
-                                    <span className="px-3 py-1 bg-primary/20 text-primary rounded-full text-sm">
-                                        Position
-                                    </span>
-                                </div>
-                            </Card>
-                        </div>
-                    </div>
-
-                    {/* Preview Card - Ball Pit */}
-                    <div ref={ballpitCardRef} className="h-screen flex items-center justify-center px-8">
-                        <Link href="/three-lab/ballpit" className="pointer-events-auto group">
-                            <div className="relative overflow-hidden rounded-2xl border-2 border-indigo-500/30 hover:border-indigo-500/60 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-indigo-500/20" style={{ maxWidth: 480 }}>
-                                <div className="absolute inset-0 bg-linear-to-br from-slate-900 via-slate-800 to-slate-900">
-                                    <div className="absolute inset-0 opacity-40">
-                                        {[...Array(12)].map((_, i) => (
-                                            <div
-                                                key={i}
-                                                className="absolute rounded-full animate-pulse"
-                                                style={{
-                                                    width: `${20 + Math.sin(i * 1.7) * 14}px`,
-                                                    height: `${20 + Math.sin(i * 1.7) * 14}px`,
-                                                    left: `${(i * 8.3) % 90}%`,
-                                                    top: `${20 + Math.sin(i * 2.3) * 60}%`,
-                                                    background: ['#6366f1', '#8b5cf6', '#06b6d4', '#ec4899', '#10b981', '#f59e0b'][i % 6],
-                                                    filter: 'blur(4px)',
-                                                    animationDelay: `${i * 0.15}s`,
-                                                }}
-                                            />
-                                        ))}
-                                    </div>
-                                </div>
-
-                                <div className="relative p-8 backdrop-blur-sm">
-                                    <div className="flex items-center gap-3 mb-4">
-                                        <Zap className="w-8 h-8 text-indigo-400" />
-                                        <h3 className="text-2xl font-bold text-slate-200">Ball Pit</h3>
-                                    </div>
-                                    <p className="text-slate-300 mb-6 leading-relaxed">
-                                        Real-time physics simulation — gravity, friction, wall bounce,
-                                        and ball-to-ball collision. Move your mouse to interact.
-                                    </p>
-                                    <div className="flex gap-2 flex-wrap mb-4">
-                                        <span className="px-3 py-1 bg-indigo-500/20 text-indigo-400 rounded-full text-sm border border-indigo-500/30">Physics</span>
-                                        <span className="px-3 py-1 bg-violet-500/20 text-violet-400 rounded-full text-sm border border-violet-500/30">Interactive</span>
-                                        <span className="px-3 py-1 bg-cyan-500/20 text-cyan-400 rounded-full text-sm border border-cyan-500/30">Three.js</span>
-                                    </div>
-                                    <div className="flex items-center gap-2 text-indigo-400 group-hover:gap-4 transition-all">
-                                        <span className="font-medium">Explore →</span>
-                                    </div>
-                                </div>
-
-                                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                                    <div className="absolute inset-0 bg-linear-to-r from-transparent via-indigo-500/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-                                </div>
-                            </div>
-                        </Link>
-                    </div>
-
-                    {/* Preview Card - Particle Ring */}
-                    <div ref={particleCardRef} className="h-screen flex items-center justify-center px-8">
-                        <Link href="/three-lab/particle-ring" className="pointer-events-auto group">
-                            <div className="relative overflow-hidden rounded-2xl border-2 border-cyan-500/30 hover:border-cyan-500/60 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-cyan-500/20">
-                                <div className="absolute inset-0 bg-linear-to-br from-slate-900 via-slate-800 to-slate-900">
-                                    <div className="absolute inset-0 opacity-30">
-                                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-cyan-500 rounded-full blur-3xl animate-pulse" />
-                                        <div className="absolute top-1/4 left-1/4 w-24 h-24 bg-blue-500 rounded-full blur-2xl animate-pulse delay-75" />
-                                    </div>
-                                </div>
-
-                                <div className="relative p-8 backdrop-blur-sm">
-                                    <div className="flex items-center gap-3 mb-4">
-                                        <Sparkles className="w-8 h-8 text-cyan-400" />
-                                        <h3 className="text-2xl font-bold text-slate-200">
-                                            Particle Ring
-                                        </h3>
-                                    </div>
-                                    <p className="text-slate-300 mb-6 leading-relaxed">
-                                        Rotating particle system forming mesmerizing concentric rings.
-                                        Interactive orbit controls with smooth animations.
-                                    </p>
-                                    <div className="flex gap-2 flex-wrap mb-4">
-                                        <span className="px-3 py-1 bg-cyan-500/20 text-cyan-400 rounded-full text-sm border border-cyan-500/30">
-                                            Particles
-                                        </span>
-                                        <span className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full text-sm border border-blue-500/30">
-                                            Interactive
-                                        </span>
-                                        <span className="px-3 py-1 bg-purple-500/20 text-purple-400 rounded-full text-sm border border-purple-500/30">
-                                            3D Rings
-                                        </span>
-                                    </div>
-                                    <div className="flex items-center gap-2 text-cyan-400 group-hover:gap-4 transition-all">
-                                        <span className="font-medium">Explore →</span>
-                                    </div>
-                                </div>
-
-                                {/* Shimmer Effect */}
-                                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                                    <div className="absolute inset-0 bg-linear-to-r from-transparent via-cyan-500/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-                                </div>
-                            </div>
-                        </Link>
-                    </div>
-
-                    {/* Section 3: Pavement Layers */}
-                    <div ref={section3Ref} className="h-screen flex items-center justify-end px-8 md:px-16">
-                        <div className="max-w-md pointer-events-auto">
-                            <Card className="bg-background/90 backdrop-blur-lg border-2 border-primary/30">
-                                <div className="flex items-center gap-2 mb-4">
-                                    <LayersIcon className="w-6 h-6 text-accent" />
-                                    <h3 className="text-2xl font-bold text-foreground">
-                                        Pavement Structure
-                                    </h3>
-                                </div>
-                                <p className="text-foreground/80 leading-relaxed mb-4">
-                                    Watch as the pavement layers appear one by one, revealing
-                                    the complex structure of modern road engineering.
-                                </p>
-                                <div className="space-y-2">
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-4 h-4 bg-gray-800 rounded"></div>
-                                        <span className="text-sm text-foreground/70">Asphalt Layer</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-4 h-4 bg-yellow-700 rounded"></div>
-                                        <span className="text-sm text-foreground/70">Base Layer</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-4 h-4 bg-amber-600 rounded"></div>
-                                        <span className="text-sm text-foreground/70">Subbase Layer</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-4 h-4 bg-orange-900 rounded"></div>
-                                        <span className="text-sm text-foreground/70">Subgrade</span>
-                                    </div>
-                                </div>
-                            </Card>
-                        </div>
-                    </div>
-
-                    {/* Preview Card - More Coming Soon */}
-                    <div ref={moreCardRef} className="h-screen flex items-center justify-center px-8">
-                        <Link href="/three-lab/futuristic-dashboard" className="pointer-events-auto group">
-                            <div className="relative overflow-hidden rounded-2xl border-2 border-purple-500/30 hover:border-purple-500/60 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/20">
-                                <div className="absolute inset-0 bg-linear-to-br from-slate-900 via-slate-800 to-slate-900">
-                                    <div className="absolute inset-0 opacity-30">
-                                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-purple-500 rounded-full blur-3xl animate-pulse" />
-                                        <div className="absolute top-1/4 left-1/4 w-24 h-24 bg-pink-500 rounded-full blur-2xl animate-pulse delay-75" />
-                                    </div>
-                                </div>
-
-                                <div className="relative p-8 backdrop-blur-sm">
-                                    <div className="flex items-center gap-3 mb-4">
-                                        <Rocket className="w-8 h-8 text-purple-400" />
-                                        <h3 className="text-2xl font-bold text-slate-200">
-                                            Futuristic Dashboard
-                                        </h3>
-                                    </div>
-                                    <p className="text-slate-300 mb-6 leading-relaxed">
-                                        Interactive 3D dashboard with floating geometric shapes, holographic rings,
-                                        distorted spheres, and pulsing light orbs in a tech-inspired environment.
-                                    </p>
-                                    <div className="flex gap-2 flex-wrap mb-4">
-                                        <span className="px-3 py-1 bg-purple-500/20 text-purple-400 rounded-full text-sm border border-purple-500/30">
-                                            Interactive
-                                        </span>
-                                        <span className="px-3 py-1 bg-pink-500/20 text-pink-400 rounded-full text-sm border border-pink-500/30">
-                                            Real-time
-                                        </span>
-                                        <span className="px-3 py-1 bg-purple-500/20 text-purple-400 rounded-full text-sm border border-purple-500/30">
-                                            WebGL
-                                        </span>
-                                    </div>
-                                    <div className="flex items-center gap-2 text-purple-400 group-hover:gap-4 transition-all">
-                                        <span className="font-medium">Explore →</span>
-                                    </div>
-                                </div>
-
-                                {/* Shimmer Effect */}
-                                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                                    <div className="absolute inset-0 bg-linear-to-r from-transparent via-purple-500/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-                                </div>
-                            </div>
-                        </Link>
-                    </div>
-
-                    {/* Section 4: Final View */}
-                    <div ref={section4Ref} className="h-screen flex items-center justify-center px-8">
-                        <div className="max-w-2xl pointer-events-auto text-center">
-                            <Card className="bg-background/90 backdrop-blur-lg border-2 border-accent/30">
-                                <h3 className="text-3xl font-bold text-foreground mb-4">
-                                    Engineering Visualization
-                                </h3>
-                                <p className="text-foreground/80 leading-relaxed mb-6">
-                                    This is just the beginning. Imagine complex structural analysis,
-                                    real-time simulations, and interactive engineering tools powered
-                                    by cutting-edge 3D technology.
-                                </p>
-                                <div className="flex flex-wrap gap-3 justify-center">
-                                    <span className="px-4 py-2 bg-primary/20 text-primary rounded-lg text-sm font-medium">
-                                        Three.js
-                                    </span>
-                                    <span className="px-4 py-2 bg-accent/20 text-accent rounded-lg text-sm font-medium">
-                                        GSAP ScrollTrigger
-                                    </span>
-                                    <span className="px-4 py-2 bg-primary/20 text-primary rounded-lg text-sm font-medium">
-                                        React Three Fiber
-                                    </span>
-                                </div>
-                            </Card>
-                        </div>
-                    </div>
+                {/* Right: sub-label */}
+                <div className="absolute right-[clamp(2.5rem,7vw,10rem)] top-1/2">
+                    <p data-sub className="text-[clamp(9px,0.72vw,11px)] uppercase tracking-widest opacity-70 m-0" />
                 </div>
             </div>
-
-            {/* Static Content Below */}
-            <Section className="bg-card/30">
-                <h3 className="text-2xl font-bold text-foreground mb-6 text-center">
-                    Traditional 3D Viewers
-                </h3>
-
-                <div className="max-w-xl mx-auto">
-                    {/* Rotating Cube Demo */}
-                    <Card>
-                        <div className="flex items-center gap-2 mb-4">
-                            <BoxSelect className="w-5 h-5 text-primary" />
-                            <h3 className="text-xl font-semibold text-foreground">
-                                Rotating Object
-                            </h3>
-                        </div>
-                        <p className="text-foreground/70 mb-4 text-sm">
-                            Interactive 3D object with orbit controls. Drag to rotate, scroll to
-                            zoom.
-                        </p>
-                        <div className="h-96 bg-linear-to-br from-background to-card rounded-lg overflow-hidden">
-                            <Canvas camera={{ position: [0, 0, 5], fov: 50 }}>
-                                <Suspense fallback={null}>
-                                    <ambientLight intensity={0.5} />
-                                    <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} />
-                                    <pointLight position={[-10, -10, -10]} />
-                                    <RotatingCube />
-                                    <OrbitControls />
-                                </Suspense>
-                            </Canvas>
-                        </div>
-                    </Card>
-                </div>
-
-                {/* Layer Information */}
-                <div className="grid md:grid-cols-4 gap-6 mt-6">
-                    <Card>
-                        <div className="w-full h-4 bg-gray-800 rounded mb-3" />
-                        <h4 className="font-semibold text-foreground mb-1">Asphalt Layer</h4>
-                        <p className="text-sm text-foreground/70">
-                            Surface layer, typically 5-10 cm thick
-                        </p>
-                    </Card>
-                    <Card>
-                        <div className="w-full h-4 bg-yellow-700 rounded mb-3" />
-                        <h4 className="font-semibold text-foreground mb-1">Base Layer</h4>
-                        <p className="text-sm text-foreground/70">
-                            Crushed stone, 15-30 cm thick
-                        </p>
-                    </Card>
-                    <Card>
-                        <div className="w-full h-4 bg-amber-600 rounded mb-3" />
-                        <h4 className="font-semibold text-foreground mb-1">Subbase Layer</h4>
-                        <p className="text-sm text-foreground/70">
-                            Granular material, 20-40 cm thick
-                        </p>
-                    </Card>
-                    <Card>
-                        <div className="w-full h-4 bg-orange-900 rounded mb-3" />
-                        <h4 className="font-semibold text-foreground mb-1">Subgrade</h4>
-                        <p className="text-sm text-foreground/70">
-                            Natural soil foundation
-                        </p>
-                    </Card>
-                </div>
-
-                {/* Future Features */}
-                <Card className="mt-6 bg-linear-to-br from-primary/10 to-accent/10">
-                    <h3 className="text-xl font-semibold text-foreground mb-4">
-                        Coming Soon
-                    </h3>
-                    <ul className="space-y-2 text-foreground/70">
-                        <li className="flex items-start gap-2">
-                            <span className="text-primary">◆</span>
-                            <span>FWD deflection basin visualization in 3D</span>
-                        </li>
-                        <li className="flex items-start gap-2">
-                            <span className="text-accent">◆</span>
-                            <span>Interactive stress distribution analysis</span>
-                        </li>
-                        <li className="flex items-start gap-2">
-                            <span className="text-primary">◆</span>
-                            <span>3D product design models and CAD exports</span>
-                        </li>
-                        <li className="flex items-start gap-2">
-                            <span className="text-accent">◆</span>
-                            <span>Real-time engineering simulations</span>
-                        </li>
-                    </ul>
-                </Card>
-            </Section>
-        </div>
-    );
-}
-
-// Scroll-Triggered Scene Component
-interface ScrollSceneProps {
-    section1Ref: React.RefObject<HTMLDivElement | null>;
-    section2Ref: React.RefObject<HTMLDivElement | null>;
-    section3Ref: React.RefObject<HTMLDivElement | null>;
-    section4Ref: React.RefObject<HTMLDivElement | null>;
-}
-
-function ScrollScene({ section1Ref, section2Ref, section3Ref, section4Ref }: ScrollSceneProps) {
-    const cubeRef = useRef<THREE.Mesh>(null);
-    const layersGroupRef = useRef<THREE.Group>(null);
-    const { camera } = useThree();
-
-    useEffect(() => {
-        if (!cubeRef.current || !layersGroupRef.current) return;
-
-        const cube = cubeRef.current;
-        const layers = layersGroupRef.current;
-
-        // Initially hide layers
-        layers.visible = false;
-
-        // Section 1: Cube appears and spins
-        if (section1Ref.current) {
-            gsap.fromTo(
-                cube.rotation,
-                { x: 0, y: 0, z: 0 },
-                {
-                    x: Math.PI * 0.5,
-                    y: Math.PI * 0.5,
-                    z: 0,
-                    scrollTrigger: {
-                        trigger: section1Ref.current,
-                        start: 'top bottom',
-                        end: 'bottom top',
-                        scrub: 1,
-                    },
-                }
-            );
-
-            gsap.fromTo(
-                cube.scale,
-                { x: 0.1, y: 0.1, z: 0.1 },
-                {
-                    x: 1, y: 1, z: 1,
-                    scrollTrigger: {
-                        trigger: section1Ref.current,
-                        start: 'top center',
-                        end: 'center center',
-                        scrub: 1,
-                    },
-                }
-            );
-        }
-
-        // Section 2: Cube continues spinning and moves
-        if (section2Ref.current) {
-            gsap.to(cube.rotation, {
-                x: Math.PI * 2,
-                y: Math.PI * 2,
-                z: Math.PI * 0.5,
-                scrollTrigger: {
-                    trigger: section2Ref.current,
-                    start: 'top bottom',
-                    end: 'bottom top',
-                    scrub: 1,
-                },
-            });
-
-            gsap.to(cube.position, {
-                x: 2,
-                y: 1,
-                scrollTrigger: {
-                    trigger: section2Ref.current,
-                    start: 'top center',
-                    end: 'bottom center',
-                    scrub: 1,
-                },
-            });
-
-            gsap.to(cube.scale, {
-                x: 1.5,
-                y: 1.5,
-                z: 1.5,
-                scrollTrigger: {
-                    trigger: section2Ref.current,
-                    start: 'top center',
-                    end: 'center center',
-                    scrub: 1,
-                },
-            });
-        }
-
-        // Section 3: Skip pavement - move directly to final view
-        if (section3Ref.current) {
-            gsap.to(cube.scale, {
-                x: 0.1,
-                y: 0.1,
-                z: 0.1,
-                scrollTrigger: {
-                    trigger: section3Ref.current,
-                    start: 'top center',
-                    end: 'bottom center',
-                    scrub: 1,
-                },
-            });
-
-            gsap.to(cube.position, {
-                x: 0,
-                y: 0,
-                scrollTrigger: {
-                    trigger: section3Ref.current,
-                    start: 'top center',
-                    end: 'bottom center',
-                    scrub: 1,
-                },
-            });
-        }
-
-        // Section 4: Final camera movement
-        if (section4Ref.current) {
-            gsap.to(camera.position, {
-                z: 12,
-                y: 5,
-                scrollTrigger: {
-                    trigger: section4Ref.current,
-                    start: 'top center',
-                    end: 'center center',
-                    scrub: 1,
-                },
-            });
-
-            gsap.to(cube.rotation, {
-                x: Math.PI * 3,
-                y: Math.PI * 3,
-                scrollTrigger: {
-                    trigger: section4Ref.current,
-                    start: 'top center',
-                    end: 'bottom center',
-                    scrub: 1,
-                },
-            });
-        }
-
-        // Cleanup
-        return () => {
-            ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
-        };
-    }, [section1Ref, section2Ref, section3Ref, section4Ref, camera]);
-
-    return (
-        <>
-            {/* Animated Cube */}
-            <mesh ref={cubeRef}>
-                <boxGeometry args={[2, 2, 2]} />
-                <meshStandardMaterial
-                    color="#2563EB"
-                    metalness={0.6}
-                    roughness={0.2}
-                />
-            </mesh>
-
-            {/* Pavement Layers - Hidden */}
-            <group ref={layersGroupRef} visible={false}>
-                <PavementLayers />
-            </group>
-
-            {/* Grid Helper */}
-            <gridHelper args={[20, 20, '#334155', '#1e293b']} position={[0, -3, 0]} />
         </>
-    );
-}
-
-// Rotating Cube Component (for static viewer)
-function RotatingCube() {
-    const meshRef = useRef<THREE.Mesh>(null);
-
-    useFrame((state, delta) => {
-        if (meshRef.current) {
-            meshRef.current.rotation.x += delta * 0.5;
-            meshRef.current.rotation.y += delta * 0.7;
-        }
-    });
-
-    return (
-        <mesh ref={meshRef} rotation={[0.5, 0.5, 0]}>
-            <boxGeometry args={[2, 2, 2]} />
-            <meshStandardMaterial
-                color="#2563EB"
-                metalness={0.5}
-                roughness={0.2}
-            />
-        </mesh>
-    );
-}
-
-// Pavement Layers Component
-function PavementLayers() {
-    const layers = [
-        { color: '#1f2937', position: [0, 1.5, 0], height: 0.3, name: 'Asphalt' },
-        { color: '#a16207', position: [0, 0.9, 0], height: 0.6, name: 'Base' },
-        { color: '#d97706', position: [0, 0, 0], height: 0.9, name: 'Subbase' },
-        { color: '#9a3412', position: [0, -1.2, 0], height: 1.2, name: 'Subgrade' },
-    ];
-
-    return (
-        <group>
-            {layers.map((layer, index) => (
-                <mesh key={index} position={layer.position as [number, number, number]}>
-                    <boxGeometry args={[4, layer.height, 4]} />
-                    <meshStandardMaterial color={layer.color} />
-                </mesh>
-            ))}
-        </group>
     );
 }
