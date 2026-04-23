@@ -1,5 +1,24 @@
 @import "tailwindcss";
 
+/* Remove ALL focus outlines and tap highlights — charts, SVGs, buttons */
+*:focus,
+*:focus-visible,
+*:focus-within {
+  outline: none !important;
+  box-shadow: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+svg,
+svg *,
+.recharts-wrapper,
+.recharts-wrapper *,
+.recharts-surface {
+  outline: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+  user-select: none;
+}
+
 :root {
   --background: #000000;
   --foreground: #FFFFFF;
