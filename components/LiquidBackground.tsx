@@ -78,7 +78,7 @@ void main() {
   gl_FragColor = vec4(clamp(next, -1.0, 1.0), curr, 0.0, 1.0);
 }`;
 
-// ── Display: height-field → normals → blue-water shading ──────────────────
+// ── Display: height-field → prismatic / iridescent caustics ───────────────
 const displayFrag = /* glsl */`
 uniform sampler2D tWave;
 uniform vec2      res;
@@ -91,16 +91,35 @@ void main() {
   float up  = texture2D(tWave, vUv + vec2( 0.0,   px.y)).r;
   float dn  = texture2D(tWave, vUv + vec2( 0.0,  -px.y)).r;
 
-  vec3  normal = normalize(vec3(l - r, dn - up, 0.07));
-  vec3  light  = normalize(vec3(0.35, 0.6, 1.0));
+  vec3  normal = normalize(vec3(l - r, dn - up, 0.06));
+  vec3  light  = normalize(vec3(0.55, 0.3, 0.85));
   float diff   = max(dot(normal, light), 0.0);
-  float spec   = pow(max(dot(normalize(light + vec3(0,0,1)), normal), 0.0), 160.0);
+  vec3  half_  = normalize(light + vec3(0.0, 0.0, 1.0));
+  float NdotH  = max(dot(normal, half_), 0.0);
+
+  // Broad specular envelope — controls where color appears
+  float spec   = pow(NdotH, 40.0);
+  // Tight white core glint
+  float glint  = pow(NdotH, 280.0);
 
   float h    = texture2D(tWave, vUv).r;
-  // Dark water surface — barely visible diffuse, bright white specular only
-  vec3  col  = diff * vec3(0.03, 0.04, 0.06)   // near-black dark water surface
-             + spec * vec3(1.0,  1.0,  1.0);   // pure white specular glint (like liquid.webp)
-  float a    = min(abs(h) * 4.0 + spec * 1.2, 0.75);
+
+  // ── Thin-film / prismatic iridescence ─────────────────────────────────
+  // Each RGB channel constructively interferes at a different wave height,
+  // just like light splitting through glass or oil on water.
+  // phase drives how quickly colours cycle as the surface ripples.
+  float phase  = h * 22.0 + (normal.x - normal.y) * 8.0;
+  vec3  iri;
+  iri.r = 0.5 + 0.5 * cos(phase);
+  iri.g = 0.5 + 0.5 * cos(phase + 2.094);  // 120° — green
+  iri.b = 0.5 + 0.5 * cos(phase + 4.189);  // 240° — blue/violet
+
+  // Combine: dark water body + prismatic caustic band + white core
+  vec3  col  = diff  * vec3(0.02, 0.03, 0.07)   // near-black deep water
+             + spec  * iri * 1.3                 // rainbow caustic
+             + glint * vec3(1.0, 0.98, 0.95);   // bright white-silver core
+
+  float a    = min(abs(h) * 5.5 + spec * 1.8 + glint * 2.2, 0.92);
   gl_FragColor = vec4(col, a);
 }`;
 
@@ -167,14 +186,12 @@ export default function LiquidBackground() {
             fragmentShader: waveFrag,
         });
 
-        const getPageH = () => document.documentElement.scrollHeight || window.innerHeight;
-
         const displayMat = new THREE.ShaderMaterial({
             uniforms: {
                 tWave: { value: null },
                 res: { value: new THREE.Vector2(W, H) },
                 uvOffset: { value: new THREE.Vector2(0, 0) },
-                uvScale: { value: new THREE.Vector2(1, H / getPageH()) },
+                uvScale: { value: new THREE.Vector2(1, 1) },
             },
             vertexShader: displayVert,
             fragmentShader: displayFrag,
@@ -198,9 +215,8 @@ export default function LiquidBackground() {
 
         const onMove = (e: MouseEvent) => {
             prev.copy(curr);
-            const pageH = getPageH();
-            // page-space UV: Y includes scroll so waves are anchored to page content
-            curr.set(e.clientX / W, 1 - (e.clientY + window.scrollY) / pageH);
+            // viewport-only UV — scroll has no effect
+            curr.set(e.clientX / W, 1 - e.clientY / H);
             moved = true;
         };
         window.addEventListener('mousemove', onMove);
@@ -209,13 +225,6 @@ export default function LiquidBackground() {
         let raf: number;
         function frame() {
             raf = requestAnimationFrame(frame);
-
-            // 0 ── update scroll-window for display pass
-            const pageH = getPageH();
-            // uvOffset.y = bottom edge of visible window in texture space
-            // texture y=1 is top of page, y=0 is bottom — so visible window bottom = 1 - (scrollY+H)/pageH
-            displayMat.uniforms.uvOffset.value.set(0, 1 - (window.scrollY + H) / pageH);
-            displayMat.uniforms.uvScale.value.set(1, H / pageH);
 
             // 1 ── draw line-segment disturbance into rtDist
             const speed = moved ? prev.distanceTo(curr) : 0;
@@ -250,8 +259,6 @@ export default function LiquidBackground() {
             H = window.innerHeight;
             renderer.setSize(W, H);
             displayMat.uniforms.res.value.set(W, H);
-            const pageH = getPageH();
-            displayMat.uniforms.uvScale.value.set(1, H / pageH);
         };
         window.addEventListener('resize', onResize);
 
