@@ -17,19 +17,15 @@ const randomFromInterval = (min: number, max: number): number => {
 };
 
 /**
- * Calculate color based on position
- * Creates a gradient effect from blue to purple to pink
+ * Pick a warm-spectrum star color.
+ * Bias toward cream/white (like real star fields), occasional gold/coral accents.
  */
-const calculateColor = (x: number): string => {
-    const normalizedX = (x + MAX_RADIUS) / (MAX_RADIUS * 2);
-
-    if (normalizedX < 0.33) {
-        return '#3b82f6'; // Blue
-    } else if (normalizedX < 0.66) {
-        return '#8b5cf6'; // Purple
-    } else {
-        return '#ec4899'; // Pink
-    }
+const calculateColor = (): string => {
+    const r = Math.random();
+    if (r < 0.45) return '#F5DCC9'; // cream (most common)
+    if (r < 0.75) return '#FFE4B5'; // warm white
+    if (r < 0.92) return '#FFD89B'; // gold
+    return '#FF9F70';               // coral accent (rare)
 };
 
 /**
@@ -46,7 +42,7 @@ export const pointsInner = Array.from(
     const y = Math.sin(randomAngle) * randomRadius;
     const z = randomFromInterval(-DEPTH, DEPTH);
 
-    const color = calculateColor(x);
+    const color = calculateColor();
 
     return {
         idx: num,
@@ -69,7 +65,7 @@ export const pointsOuter = Array.from(
     const y = Math.sin(angle) * randomRadius;
     const z = randomFromInterval(-DEPTH * 10, DEPTH * 10);
 
-    const color = calculateColor(x);
+    const color = calculateColor();
 
     return {
         idx: num,

@@ -74,31 +74,33 @@ User has a global `*:focus { outline: none !important }` reset — respect it. D
 
 ## 3D Lab (`/three-lab`)
 
-The lab hub is a **full-viewport particle ring scene** with 4 interactive project nodes.
+The lab hub is a **sphere-based starfield** with 4 interactive project nodes embedded on the disc.
 
-- **Particle field**: 6,000 GPU points on 3 concentric rings, custom GLSL vertex + fragment shader. Position computed in shader from `aOffset` / `aRing` / `aSeed` attributes + `uTime` uniform.
-- **Project nodes**: 4 `<sphereGeometry>` meshes at angle 0°/90°/180°/270° on radius 7. Each has:
-  - `meshStandardMaterial` with `emissive` + `emissiveIntensity` ramped per-frame
-  - Bob animation, hover scale-to-1.7×, halo torus that appears on hover
+- **Starfield**: `pointsInner` (2,500) + `pointsOuter` (625) from `lib/particleUtils.ts`, rendered via drei `<Instances>` — 2 draw calls total. Inner ring is a thin disc in XY plane (z = ±2); outer is wider scatter (z = ±20).
+- **Palette**: warm-spectrum only. Particle colors are randomized in `particleUtils.ts` — 45% cream `#F5DCC9`, 30% warm white `#FFE4B5`, 17% gold `#FFD89B`, 8% coral `#FF9F70`. **No purple/blue/cyan** — user explicitly rejected those.
+- **Project nodes**: 4 `<sphereGeometry>` meshes at angles 0°/90°/180°/270° on radius 11 (XY plane, z=0) — embedded in the outer edge of the inner ring. Each has:
+  - `meshStandardMaterial toneMapped={false}` with `emissive` + `emissiveIntensity` ramped per-frame
+  - Bob animation along Z, hover scale-to-1.7×, halo torus appears on hover
   - `<pointLight>` for local glow
-- **Hover behavior**: `onPointerOver` sets `hoveredId` state. That:
-  - Drives the node's scale + emissive pulse
-  - Sets `uTarget` uniform on the particle shader → particles flow toward the node
-  - Slides in a left-side editorial info card with project details
+- **Hover**: scale + emissive pulse + halo torus + editorial info card slides in from left
 - **Click**: `router.push(project.href)`
+- **Camera**: starts at `[10, -7.5, 18]` looking at origin (oblique disc view, matches original standalone particle-ring camera). `<OrbitControls>` from drei with `autoRotate={!hoveredId}`, `enableZoom`, `enablePan={false}`, distance 10–32. User wants control.
 - **Keyboard nav**: ← → ↑ ↓ / 1–4 / h j k l to cycle, Enter to open, Esc to clear
-- **Camera**: auto-orbits at radius 14 when no hover; pauses on hover. Subtle mouse-driven parallax.
-- **Postprocessing**: Bloom (`intensity=0.35`, `luminanceThreshold=0.35`) + ChromaticAberration + Vignette
+- **Postprocessing**: Bloom (`intensity=0.45`, `luminanceThreshold=0.55`, **no** mipmapBlur, **no** ChromaticAberration) + Vignette
+
+### History — what we tried and rejected
+
+1. **GLSL particle shader** (6,000 additive points with cursor-driven displacement) — looked impressive but user said the bloom blew everything out, and after we toned it down the colors looked "not good" and the ring looked "blurry". Rejected.
+2. **All-warm 3-color shader gradient** — still too uniform-disc-like. Rejected.
+
+The sphere starfield is the kept solution: literal 3D star points scattered with Z-depth gives the "floating in space" feel the user wants.
 
 ### 3D Lab anti-patterns
 
-**Don't over-bloom additive particle scenes.** A previous iteration with `intensity=0.95` + `luminanceThreshold=0.04` whited out the entire canvas. Keep:
-- Bloom intensity ≤ 0.4
-- Bloom luminanceThreshold ≥ 0.3
-- Particle fragment: `col *= 0.45 + vGlow * 0.5` (not 0.7+)
-- Particle alpha: `(core * 0.55 + halo) * depthFade`
-- Node emissive at rest ~0.35, hovered ~1.0
-- Point lights ~0.8 at rest, ~2.2 hovered
+- Don't use GLSL points/shader for the hub — user prefers sphere meshes
+- Don't introduce purple/blue/cyan in the starfield palette
+- Don't disable OrbitControls or remove zoom on the hub — user explicitly wants to "move it and play with it"
+- Don't over-bloom: keep `intensity ≤ 0.5`, `luminanceThreshold ≥ 0.5`, no mipmapBlur, no chromatic aberration on this scene
 
 ## Page structure
 
