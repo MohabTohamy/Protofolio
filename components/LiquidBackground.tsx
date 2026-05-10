@@ -102,10 +102,16 @@ void main() {
   float up  = texture2D(tWave, vUv + vec2( 0.0,   px.y)).r;
   float dn  = texture2D(tWave, vUv + vec2( 0.0,  -px.y)).r;
 
-  vec3  normal = normalize(vec3(l - r, dn - up, 0.07));
-  vec3  light  = normalize(vec3(0.35, 0.6, 1.0));
+  vec3  normal = normalize(vec3(l - r, dn - up, 0.06));
+  vec3  light  = normalize(vec3(0.55, 0.3, 0.85));
   float diff   = max(dot(normal, light), 0.0);
-  float spec   = pow(max(dot(normalize(light + vec3(0,0,1)), normal), 0.0), 160.0);
+  vec3  half_  = normalize(light + vec3(0.0, 0.0, 1.0));
+  float NdotH  = max(dot(normal, half_), 0.0);
+
+  // Broad specular envelope — controls where color appears
+  float spec   = pow(NdotH, 40.0);
+  // Tight white core glint
+  float glint  = pow(NdotH, 280.0);
 
   float h = texture2D(tWave, vUv).r;
 
@@ -132,164 +138,152 @@ void main() {
 // Canvas is appended directly to document.body so no React parent
 // (stacking contexts, transforms, backdrop-filter) can break position:fixed.
 export default function LiquidBackground() {
-    useEffect(() => {
-        const canvas = document.createElement('canvas');
-        Object.assign(canvas.style, {
-            position: 'fixed',
-            inset: '0',
-            width: '100%',
-            height: '100%',
-            display: 'block',
-            pointerEvents: 'none',
-            zIndex: '1',
-            mixBlendMode: 'screen',
-        });
-        document.body.appendChild(canvas);
+  useEffect(() => {
+    const canvas = document.createElement('canvas');
+    Object.assign(canvas.style, {
+      position: 'fixed',
+      inset: '0',
+      width: '100%',
+      height: '100%',
+      display: 'block',
+      pointerEvents: 'none',
+      zIndex: '1',
+      mixBlendMode: 'screen',
+    });
+    document.body.appendChild(canvas);
 
-        let W = window.innerWidth;
-        let H = window.innerHeight;
+    let W = window.innerWidth;
+    let H = window.innerHeight;
 
-        // renderer
-        const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: false });
-        renderer.setSize(W, H);
-        renderer.setPixelRatio(1);
-        renderer.autoClear = false;
+    // renderer
+    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: false });
+    renderer.setSize(W, H);
+    renderer.setPixelRatio(1);
+    renderer.autoClear = false;
 
-        const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
-        const geo = new THREE.PlaneGeometry(2, 2);
+    const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+    const geo = new THREE.PlaneGeometry(2, 2);
 
-        // render targets (HalfFloat = wide browser support)
-        const rtOpts: THREE.RenderTargetOptions = {
-            type: THREE.HalfFloatType,
-            minFilter: THREE.LinearFilter,
-            magFilter: THREE.LinearFilter,
-            depthBuffer: false,
-        };
-        let rtA = new THREE.WebGLRenderTarget(SIM, SIM, rtOpts); // wave ping
-        let rtB = new THREE.WebGLRenderTarget(SIM, SIM, rtOpts); // wave pong
-        const rtDist = new THREE.WebGLRenderTarget(SIM, SIM, rtOpts); // disturb
+    // render targets (HalfFloat = wide browser support)
+    const rtOpts: THREE.RenderTargetOptions = {
+      type: THREE.HalfFloatType,
+      minFilter: THREE.LinearFilter,
+      magFilter: THREE.LinearFilter,
+      depthBuffer: false,
+    };
+    let rtA = new THREE.WebGLRenderTarget(SIM, SIM, rtOpts); // wave ping
+    let rtB = new THREE.WebGLRenderTarget(SIM, SIM, rtOpts); // wave pong
+    const rtDist = new THREE.WebGLRenderTarget(SIM, SIM, rtOpts); // disturb
 
-        // materials
-        const disturbMat = new THREE.ShaderMaterial({
-            uniforms: {
-                p0: { value: new THREE.Vector2(0.5, 0.5) },
-                p1: { value: new THREE.Vector2(0.5, 0.5) },
-                radius: { value: STROKE_WIDTH / SIM }, // streak width in UV space
-                strength: { value: 0.0 },
-            },
-            vertexShader: quadVert,
-            fragmentShader: disturbFrag,
-        });
+    // materials
+    const disturbMat = new THREE.ShaderMaterial({
+      uniforms: {
+        p0: { value: new THREE.Vector2(0.5, 0.5) },
+        p1: { value: new THREE.Vector2(0.5, 0.5) },
+        radius: { value: STROKE_WIDTH / SIM }, // streak width in UV space
+        strength: { value: 0.0 },
+      },
+      vertexShader: quadVert,
+      fragmentShader: disturbFrag,
+    });
 
-        const waveMat = new THREE.ShaderMaterial({
-            uniforms: {
-                tWave: { value: null },
-                tDisturb: { value: null },
-                res: { value: new THREE.Vector2(SIM, SIM) },
-            },
-            vertexShader: quadVert,
-            fragmentShader: waveFrag,
-        });
+    const waveMat = new THREE.ShaderMaterial({
+      uniforms: {
+        tWave: { value: null },
+        tDisturb: { value: null },
+        res: { value: new THREE.Vector2(SIM, SIM) },
+      },
+      vertexShader: quadVert,
+      fragmentShader: waveFrag,
+    });
 
-        const getPageH = () => document.documentElement.scrollHeight || window.innerHeight;
+    const displayMat = new THREE.ShaderMaterial({
+      uniforms: {
+        tWave: { value: null },
+        res: { value: new THREE.Vector2(W, H) },
+        uvOffset: { value: new THREE.Vector2(0, 0) },
+        uvScale: { value: new THREE.Vector2(1, 1) },
+      },
+      vertexShader: displayVert,
+      fragmentShader: displayFrag,
+      transparent: true,
+    });
 
-        const displayMat = new THREE.ShaderMaterial({
-            uniforms: {
-                tWave: { value: null },
-                res: { value: new THREE.Vector2(W, H) },
-                uvOffset: { value: new THREE.Vector2(0, 0) },
-                uvScale: { value: new THREE.Vector2(1, H / getPageH()) },
-            },
-            vertexShader: displayVert,
-            fragmentShader: displayFrag,
-            transparent: true,
-        });
+    // scenes (one mesh each)
+    const mkScene = (mat: THREE.Material) => {
+      const s = new THREE.Scene();
+      s.add(new THREE.Mesh(geo, mat));
+      return s;
+    };
+    const disturbScene = mkScene(disturbMat);
+    const waveScene = mkScene(waveMat);
+    const displayScene = mkScene(displayMat);
 
-        // scenes (one mesh each)
-        const mkScene = (mat: THREE.Material) => {
-            const s = new THREE.Scene();
-            s.add(new THREE.Mesh(geo, mat));
-            return s;
-        };
-        const disturbScene = mkScene(disturbMat);
-        const waveScene = mkScene(waveMat);
-        const displayScene = mkScene(displayMat);
+    // mouse tracking
+    const prev = new THREE.Vector2(0.5, 0.5);
+    const curr = new THREE.Vector2(0.5, 0.5);
+    let moved = false;
 
-        // mouse tracking
-        const prev = new THREE.Vector2(0.5, 0.5);
-        const curr = new THREE.Vector2(0.5, 0.5);
-        let moved = false;
+    const onMove = (e: MouseEvent) => {
+      prev.copy(curr);
+      // viewport-only UV — scroll has no effect
+      curr.set(e.clientX / W, 1 - e.clientY / H);
+      moved = true;
+    };
+    window.addEventListener('mousemove', onMove);
 
-        const onMove = (e: MouseEvent) => {
-            prev.copy(curr);
-            const pageH = getPageH();
-            // page-space UV: Y includes scroll so waves are anchored to page content
-            curr.set(e.clientX / W, 1 - (e.clientY + window.scrollY) / pageH);
-            moved = true;
-        };
-        window.addEventListener('mousemove', onMove);
+    // render loop
+    let raf: number;
+    function frame() {
+      raf = requestAnimationFrame(frame);
 
-        // render loop
-        let raf: number;
-        function frame() {
-            raf = requestAnimationFrame(frame);
+      // 1 ── draw line-segment disturbance into rtDist
+      const speed = moved ? prev.distanceTo(curr) : 0;
+      disturbMat.uniforms.p0.value.copy(prev);
+      disturbMat.uniforms.p1.value.copy(curr);
+      disturbMat.uniforms.strength.value = Math.min(speed * MOUSE_STRENGTH, 1.0);
+      renderer.setRenderTarget(rtDist);
+      renderer.clear();
+      renderer.render(disturbScene, camera);
 
-            // 0 ── update scroll-window for display pass
-            const pageH = getPageH();
-            // uvOffset.y = bottom edge of visible window in texture space
-            // texture y=1 is top of page, y=0 is bottom — so visible window bottom = 1 - (scrollY+H)/pageH
-            displayMat.uniforms.uvOffset.value.set(0, 1 - (window.scrollY + H) / pageH);
-            displayMat.uniforms.uvScale.value.set(1, H / pageH);
+      // 2 ── propagate wave: rtA (read) → rtB (write)
+      waveMat.uniforms.tWave.value = rtA.texture;
+      waveMat.uniforms.tDisturb.value = rtDist.texture;
+      renderer.setRenderTarget(rtB);
+      renderer.clear();
+      renderer.render(waveScene, camera);
+      [rtA, rtB] = [rtB, rtA];          // swap ping-pong
 
-            // 1 ── draw line-segment disturbance into rtDist
-            const speed = moved ? prev.distanceTo(curr) : 0;
-            disturbMat.uniforms.p0.value.copy(prev);
-            disturbMat.uniforms.p1.value.copy(curr);
-            disturbMat.uniforms.strength.value = Math.min(speed * MOUSE_STRENGTH, 1.0);
-            renderer.setRenderTarget(rtDist);
-            renderer.clear();
-            renderer.render(disturbScene, camera);
+      // 3 ── display to screen
+      displayMat.uniforms.tWave.value = rtA.texture;
+      renderer.setRenderTarget(null);
+      renderer.clear();
+      renderer.render(displayScene, camera);
 
-            // 2 ── propagate wave: rtA (read) → rtB (write)
-            waveMat.uniforms.tWave.value = rtA.texture;
-            waveMat.uniforms.tDisturb.value = rtDist.texture;
-            renderer.setRenderTarget(rtB);
-            renderer.clear();
-            renderer.render(waveScene, camera);
-            [rtA, rtB] = [rtB, rtA];          // swap ping-pong
+      prev.copy(curr);
+      moved = false;
+    }
+    frame();
 
-            // 3 ── display to screen
-            displayMat.uniforms.tWave.value = rtA.texture;
-            renderer.setRenderTarget(null);
-            renderer.clear();
-            renderer.render(displayScene, camera);
+    const onResize = () => {
+      W = window.innerWidth;
+      H = window.innerHeight;
+      renderer.setSize(W, H);
+      displayMat.uniforms.res.value.set(W, H);
+    };
+    window.addEventListener('resize', onResize);
 
-            prev.copy(curr);
-            moved = false;
-        }
-        frame();
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('resize', onResize);
+      renderer.dispose();
+      rtA.dispose();
+      rtB.dispose();
+      rtDist.dispose();
+      canvas.remove();
+    };
+  }, []);
 
-        const onResize = () => {
-            W = window.innerWidth;
-            H = window.innerHeight;
-            renderer.setSize(W, H);
-            displayMat.uniforms.res.value.set(W, H);
-            const pageH = getPageH();
-            displayMat.uniforms.uvScale.value.set(1, H / pageH);
-        };
-        window.addEventListener('resize', onResize);
-
-        return () => {
-            cancelAnimationFrame(raf);
-            window.removeEventListener('mousemove', onMove);
-            window.removeEventListener('resize', onResize);
-            renderer.dispose();
-            rtA.dispose();
-            rtB.dispose();
-            rtDist.dispose();
-            canvas.remove();
-        };
-    }, []);
-
-    return null;
+  return null;
 }
