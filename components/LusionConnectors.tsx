@@ -16,16 +16,9 @@ const shuffle = (accent = 0) => [
     { color: 'white', roughness: 0.1 },
     { color: 'white', roughness: 0.75 },
     { color: 'white', roughness: 0.1 },
-    { color: 'white', roughness: 0.75 },
     { color: accents[accent], roughness: 0.1, accent: true },
     { color: accents[accent], roughness: 0.75, accent: true },
-    { color: accents[accent], roughness: 0.1, accent: true },
-    { color: accents[accent], roughness: 0.75, accent: true },
-    { color: accents[accent], roughness: 0.1, accent: true },
-    { color: '#666', roughness: 0.3 },
-    { color: '#888', roughness: 0.5 },
-    { color: '#aaa', roughness: 0.2 },
-    { color: '#333', roughness: 0.9 },
+    { color: accents[accent], roughness: 0.1, accent: true }
 ];
 
 function Scene() {

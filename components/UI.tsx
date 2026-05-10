@@ -1,45 +1,49 @@
 'use client';
 
 import { ReactNode } from 'react';
-import { motion } from 'framer-motion';
+import Link from 'next/link';
 
 interface SectionProps {
     children: ReactNode;
     className?: string;
     id?: string;
+    narrow?: boolean;
 }
 
-export function Section({ children, className = '', id }: SectionProps) {
+export function Section({ children, className = '', id, narrow = false }: SectionProps) {
+    const max = narrow ? 'max-w-3xl' : 'max-w-6xl';
     return (
-        <section id={id} className={`py-16 px-4 sm:px-6 lg:px-8 ${className}`}>
-            <div className="max-w-7xl mx-auto">{children}</div>
+        <section id={id} className={`py-20 px-6 ${className}`}>
+            <div className={`${max} mx-auto`}>{children}</div>
         </section>
     );
 }
 
 interface SectionTitleProps {
     children: ReactNode;
+    eyebrow?: string;
     subtitle?: string;
+    align?: 'left' | 'center';
 }
 
-export function SectionTitle({ children, subtitle }: SectionTitleProps) {
+export function SectionTitle({
+    children,
+    eyebrow,
+    subtitle,
+    align = 'left',
+}: SectionTitleProps) {
     return (
-        <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-12"
-        >
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+        <div className={`mb-12 ${align === 'center' ? 'text-center' : ''}`}>
+            {eyebrow && <Eyebrow className="mb-4">{eyebrow}</Eyebrow>}
+            <h2 className="font-display text-4xl md:text-5xl text-[var(--fg)] leading-tight">
                 {children}
             </h2>
             {subtitle && (
-                <p className="text-foreground/70 text-lg max-w-2xl mx-auto">
+                <p className="text-[var(--fg-muted)] text-lg mt-4 max-w-2xl">
                     {subtitle}
                 </p>
             )}
-            <div className="w-20 h-1 bg-linear-to-r from-primary to-accent mx-auto mt-4 rounded-full" />
-        </motion.div>
+        </div>
     );
 }
 
@@ -51,25 +55,36 @@ interface CardProps {
 
 export function Card({ children, className = '', hover = true }: CardProps) {
     return (
-        <motion.div
-            whileHover={hover ? { y: -5 } : undefined}
-            className={`glass rounded-xl p-6 transition-all duration-300 ${hover ? 'hover:shadow-xl hover:shadow-primary/25 hover:border-white/20' : ''
-                } ${className}`}
+        <div
+            className={`card-editorial p-6 ${hover ? 'hover:-translate-y-0.5' : ''} ${className}`}
         >
             {children}
-        </motion.div>
+        </div>
     );
 }
 
 interface ButtonProps {
     children: ReactNode;
-    variant?: 'primary' | 'secondary' | 'outline';
+    variant?: 'primary' | 'ghost' | 'link' | 'secondary' | 'outline';
     href?: string;
     onClick?: () => void;
     className?: string;
     fullWidth?: boolean;
     type?: 'button' | 'submit' | 'reset';
 }
+
+const variantStyles: Record<NonNullable<ButtonProps['variant']>, string> = {
+    primary:
+        'px-5 py-2.5 rounded-full bg-[var(--accent)] text-[var(--bg)] hover:bg-[var(--accent-dim)]',
+    secondary:
+        'px-5 py-2.5 rounded-full bg-[var(--fg)] text-[var(--bg)] hover:bg-[var(--fg-muted)]',
+    ghost:
+        'px-5 py-2.5 rounded-full border border-[var(--hairline-strong)] text-[var(--fg)] hover:border-[var(--fg)] hover:bg-[var(--fg)]/5',
+    outline:
+        'px-5 py-2.5 rounded-full border border-[var(--hairline-strong)] text-[var(--fg)] hover:border-[var(--fg)] hover:bg-[var(--fg)]/5',
+    link:
+        'text-[var(--fg)] hover:text-[var(--accent)] underline underline-offset-4 decoration-[var(--hairline-strong)] hover:decoration-[var(--accent)]',
+};
 
 export function Button({
     children,
@@ -80,38 +95,48 @@ export function Button({
     fullWidth = false,
     type = 'button',
 }: ButtonProps) {
-    const baseStyles = `px-6 py-3 rounded-lg font-medium transition-all ${fullWidth ? 'w-full' : ''
-        } ${className}`;
-
-    const variants = {
-        primary:
-            'bg-white hover:bg-gray-100 text-black shadow-lg shadow-white/10',
-        secondary:
-            'bg-gray-700 hover:bg-gray-600 text-white shadow-lg shadow-gray-700/30',
-        outline:
-            'border-2 border-white/80 text-white hover:border-white hover:bg-white/10 backdrop-blur-sm',
-    };
-
-    const variantStyles = variants[variant];
+    const base =
+        'inline-flex items-center justify-center gap-2 text-sm font-medium transition-all duration-200';
+    const cls = `${base} ${variantStyles[variant]} ${fullWidth ? 'w-full' : ''} ${className}`;
 
     if (href) {
+        const isExternal =
+            href.startsWith('http') || href.startsWith('mailto:') || href.startsWith('tel:') || href.startsWith('#');
+        if (isExternal) {
+            return (
+                <a
+                    href={href}
+                    className={cls}
+                    target={href.startsWith('http') ? '_blank' : undefined}
+                    rel={href.startsWith('http') ? 'noopener noreferrer' : undefined}
+                >
+                    {children}
+                </a>
+            );
+        }
         return (
-            <a
-                href={href}
-                className={`inline-block text-center ${baseStyles} ${variantStyles}`}
-            >
+            <Link href={href} className={cls}>
                 {children}
-            </a>
+            </Link>
         );
     }
 
     return (
-        <button
-            type={type}
-            onClick={onClick}
-            className={`${baseStyles} ${variantStyles}`}
-        >
+        <button type={type} onClick={onClick} className={cls}>
             {children}
         </button>
+    );
+}
+
+interface EyebrowProps {
+    children: ReactNode;
+    className?: string;
+}
+
+export function Eyebrow({ children, className = '' }: EyebrowProps) {
+    return (
+        <p className={`text-xs uppercase tracking-[0.18em] text-[var(--fg-muted)] ${className}`}>
+            {children}
+        </p>
     );
 }

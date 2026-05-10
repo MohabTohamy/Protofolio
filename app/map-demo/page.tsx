@@ -576,7 +576,7 @@ export default function MapDemoPage() {
 
                                     {/* Line Features */}
                                     {lineFeatures.length > 0 && (
-                                        <Source id="lines-source" type="geojson" data={lineGeoJSON}>
+                                        <Source id="lines-source" type="geojson" data={lineGeoJSON as unknown as GeoJSON.FeatureCollection}>
                                             <Layer
                                                 id="lines-layer"
                                                 type="line"
@@ -602,7 +602,7 @@ export default function MapDemoPage() {
 
                                     {/* Point Features */}
                                     {pointFeatures.length > 0 && (
-                                        <Source id="points-source" type="geojson" data={pointGeoJSON}>
+                                        <Source id="points-source" type="geojson" data={pointGeoJSON as unknown as GeoJSON.FeatureCollection}>
                                             <Layer
                                                 id="points-layer"
                                                 type="circle"

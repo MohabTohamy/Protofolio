@@ -1,14 +1,14 @@
-﻿'use client';
+'use client';
 
-import { Suspense, useRef, useEffect, useState } from 'react';
+import { Suspense, useRef, useEffect } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
-import { Section, SectionTitle, Card } from '@/components/UI';
-import { BoxSelect, Layers as LayersIcon, ChevronDown, Rocket, Sparkles } from 'lucide-react';
+import { ArrowLeft, ArrowUpRight } from 'lucide-react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import * as THREE from 'three';
 import Link from 'next/link';
+import { Eyebrow } from '@/components/UI';
 
 if (typeof window !== 'undefined') {
     gsap.registerPlugin(ScrollTrigger);
@@ -20,149 +20,71 @@ export default function ThreeLabClassicPage() {
     const section2Ref = useRef<HTMLDivElement>(null);
     const section3Ref = useRef<HTMLDivElement>(null);
     const section4Ref = useRef<HTMLDivElement>(null);
-    const particleCardRef = useRef<HTMLDivElement>(null);
-    const moreCardRef = useRef<HTMLDivElement>(null);
-    const [scrollProgress, setScrollProgress] = useState(0);
-    const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
     useEffect(() => {
-        const handleScroll = () => {
-            const scrollTop = window.scrollY;
-            const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-            const progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
-            setScrollProgress(progress);
-        };
-
-        const handleMouseMove = (e: MouseEvent) => {
-            setMousePosition({
-                x: (e.clientX / window.innerWidth - 0.5) * 30,
-                y: (e.clientY / window.innerHeight - 0.5) * 30,
-            });
-        };
-
-        window.addEventListener('scroll', handleScroll);
-        window.addEventListener('mousemove', handleMouseMove);
-
-        if (particleCardRef.current) {
-            gsap.fromTo(
-                particleCardRef.current,
-                { scale: 0, z: -200, opacity: 0 },
-                {
-                    scale: 1, z: 0, opacity: 1,
-                    duration: 1,
-                    ease: 'back.out(1.7)',
-                    scrollTrigger: {
-                        trigger: particleCardRef.current,
-                        start: 'top 80%',
-                        end: 'top 50%',
-                        scrub: 1,
-                    },
-                }
-            );
-        }
-
-        if (moreCardRef.current) {
-            gsap.fromTo(
-                moreCardRef.current,
-                { scale: 0, z: -200, opacity: 0 },
-                {
-                    scale: 1, z: 0, opacity: 1,
-                    duration: 1,
-                    ease: 'back.out(1.7)',
-                    scrollTrigger: {
-                        trigger: moreCardRef.current,
-                        start: 'top 80%',
-                        end: 'top 50%',
-                        scrub: 1,
-                    },
-                }
-            );
-        }
-
         return () => {
-            window.removeEventListener('scroll', handleScroll);
-            window.removeEventListener('mousemove', handleMouseMove);
-            ScrollTrigger.getAll().forEach(trigger => trigger.kill());
+            ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
         };
     }, []);
 
     return (
-        <div className="min-h-screen relative">
-
-            {/* â”€â”€ Version comparison banner â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
-            <div className="fixed top-16 inset-x-0 z-50 flex justify-center pointer-events-none">
-                <div className="flex items-center gap-3 bg-black/70 border border-white/10 rounded-full px-4 py-1.5 backdrop-blur-md pointer-events-auto">
-                    <span className="text-[10px] uppercase tracking-widest text-white/50 font-mono">Comparing</span>
-                    <span className="text-[10px] uppercase tracking-widest text-white/40 font-mono">Classic</span>
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                    <Link
-                        href="/three-lab"
-                        className="text-[10px] uppercase tracking-widest text-cyan-400 hover:text-cyan-300 transition-colors font-mono"
-                    >
-                        â† New version
-                    </Link>
-                </div>
+        <div className="min-h-screen relative bg-[var(--bg)]">
+            {/* Top bar */}
+            <div className="fixed top-16 left-0 right-0 z-40 px-6 flex items-center justify-between bg-[var(--bg)]/80 backdrop-blur-md border-b border-[var(--hairline)] h-12">
+                <Link
+                    href="/three-lab"
+                    className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-[var(--fg)]/60 hover:text-[var(--fg)] transition-colors"
+                >
+                    <ArrowLeft className="w-3.5 h-3.5" />
+                    3D Lab
+                </Link>
+                <p className="hidden md:block text-xs uppercase tracking-[0.18em] text-[var(--fg)]/50">
+                    04 / 04 — Scroll Scene
+                </p>
+                <div />
             </div>
 
-            {/* Scroll Progress Rocket */}
-            <div className="fixed right-8 top-1/2 -translate-y-1/2 z-50 flex flex-col items-center gap-2">
-                <div className="relative h-64 w-1 bg-slate-700 rounded-full overflow-hidden">
-                    <div
-                        className="absolute bottom-0 left-0 right-0 bg-linear-to-t from-cyan-500 to-blue-500 transition-all duration-300"
-                        style={{ height: `${scrollProgress}%` }}
-                    />
-                </div>
-                <div
-                    className="absolute transition-all duration-300"
-                    style={{
-                        top: `calc(${scrollProgress}% - 12px)`,
-                        transform: 'translateY(-50%)'
-                    }}
-                >
-                    <Rocket className="w-6 h-6 text-cyan-400 rotate-180" />
-                </div>
-                <span className="text-xs text-slate-400 font-mono">{Math.round(scrollProgress)}%</span>
-            </div>
-
-            {/* Hero Section */}
-            <Section className="min-h-screen flex items-center justify-center relative overflow-hidden">
-                <div
-                    className="absolute inset-0 transition-transform duration-300 ease-out"
-                    style={{ transform: `translate(${mousePosition.x}px, ${mousePosition.y}px)` }}
-                >
-                    <div className="absolute inset-0 opacity-20">
-                        <div className="absolute top-20 left-10 w-72 h-72 bg-primary rounded-full blur-3xl animate-pulse" />
-                        <div className="absolute bottom-20 right-10 w-96 h-96 bg-accent rounded-full blur-3xl animate-pulse delay-75" />
-                        <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-purple-500 rounded-full blur-3xl animate-pulse delay-150" />
-                    </div>
-                </div>
-
-                <div className="text-center relative z-10">
-                    <div className="inline-block mb-4 px-3 py-1 bg-emerald-500/10 border border-emerald-500/30 rounded-full text-emerald-400 text-xs uppercase tracking-widest font-mono">
-                        Classic Version
-                    </div>
-                    <SectionTitle subtitle="Scroll-based 3D visualization and engineering simulations">
-                        3D Engineering Lab
-                    </SectionTitle>
-                    <p className="text-foreground/60 text-lg mb-8 max-w-2xl mx-auto">
-                        Experience interactive 3D engineering visualizations with scroll-triggered animations
+            {/* Hero */}
+            <section className="min-h-screen flex items-center px-6 pt-28">
+                <div className="max-w-3xl mx-auto">
+                    <Eyebrow className="mb-6">
+                        Scroll-driven 3D · gsap scrolltrigger
+                    </Eyebrow>
+                    <h1 className="font-display text-5xl md:text-7xl text-[var(--fg)] leading-[0.98] mb-8">
+                        A camera that moves with you.
+                    </h1>
+                    <p className="text-lg text-[var(--fg-muted)] leading-relaxed max-w-xl mb-12">
+                        Four scroll-triggered scenes. The same WebGL cube,
+                        choreographed across rotation, scale, position, and
+                        camera depth — all driven by your scrollbar.
                     </p>
-                    <div className="flex flex-col items-center gap-2 animate-bounce">
-                        <span className="text-sm text-foreground/50">Scroll to explore</span>
-                        <ChevronDown className="w-6 h-6 text-primary" />
+                    <div className="flex items-center gap-3 text-xs uppercase tracking-[0.2em] text-[var(--fg)]/40 animate-pulse">
+                        <span>Scroll</span>
+                        <svg width="10" height="14" viewBox="0 0 10 14" fill="none">
+                            <path d="M5 0v14M1 9l4 5 4-5" stroke="currentColor" strokeWidth="1.2" />
+                        </svg>
                     </div>
                 </div>
-            </Section>
+            </section>
 
-            {/* Scroll-Driven 3D Experience */}
+            {/* Scroll-driven 3D experience */}
             <div className="relative">
-                {/* Fixed Canvas */}
+                {/* Sticky canvas */}
                 <div ref={canvasRef} className="sticky top-0 h-screen w-full">
                     <Canvas camera={{ position: [0, 0, 8], fov: 50 }}>
                         <Suspense fallback={null}>
-                            <ambientLight intensity={0.5} />
-                            <spotLight position={[10, 10, 10]} angle={0.3} penumbra={1} intensity={1} />
-                            <pointLight position={[-10, -10, -10]} intensity={0.5} />
+                            <ambientLight intensity={0.4} />
+                            <spotLight
+                                position={[10, 10, 10]}
+                                angle={0.3}
+                                penumbra={1}
+                                intensity={1}
+                            />
+                            <pointLight
+                                position={[-10, -10, -10]}
+                                intensity={0.4}
+                                color="#E8704F"
+                            />
                             <ScrollScene
                                 section1Ref={section1Ref}
                                 section2Ref={section2Ref}
@@ -173,232 +95,227 @@ export default function ThreeLabClassicPage() {
                     </Canvas>
                 </div>
 
-                {/* Scroll Content Sections */}
+                {/* Scroll content */}
                 <div className="relative pointer-events-none">
                     {/* Section 1 */}
-                    <div ref={section1Ref} className="h-screen flex items-center justify-end px-8 md:px-16">
-                        <div className="max-w-md pointer-events-auto">
-                            <Card className="bg-background/90 backdrop-blur-lg border-2 border-primary/30">
-                                <div className="flex items-center gap-2 mb-4">
-                                    <BoxSelect className="w-6 h-6 text-primary" />
-                                    <h3 className="text-2xl font-bold text-foreground">Interactive 3D Objects</h3>
-                                </div>
-                                <p className="text-foreground/80 leading-relaxed">
-                                    Explore engineering concepts through interactive 3D visualizations.
-                                    Watch as objects transform and animate based on your scroll position.
-                                </p>
-                            </Card>
+                    <div
+                        ref={section1Ref}
+                        className="h-screen flex items-center justify-end px-6 md:px-16"
+                    >
+                        <div className="max-w-sm pointer-events-auto card-editorial p-6">
+                            <p className="font-mono text-xs text-[var(--fg-dim)] uppercase tracking-wider mb-3">
+                                01 — birth
+                            </p>
+                            <h3 className="font-display text-3xl text-[var(--fg)] mb-3 leading-tight">
+                                The cube enters.
+                            </h3>
+                            <p className="text-sm text-[var(--fg-muted)] leading-relaxed">
+                                Scale tweens from 0.1 to 1 across this section.
+                                Rotation ramps to a quarter turn on X and Y.
+                                Smooth-scrubbed against the scroll position.
+                            </p>
                         </div>
                     </div>
 
                     {/* Section 2 */}
-                    <div ref={section2Ref} className="h-screen flex items-center justify-start px-8 md:px-16">
-                        <div className="max-w-md pointer-events-auto">
-                            <Card className="bg-background/90 backdrop-blur-lg border-2 border-accent/30">
-                                <h3 className="text-2xl font-bold text-foreground mb-4">Dynamic Transformations</h3>
-                                <p className="text-foreground/80 leading-relaxed mb-4">
-                                    The cube rotates and scales as you scroll, demonstrating
-                                    real-time 3D transformations and animations.
-                                </p>
-                                <div className="flex gap-2 flex-wrap">
-                                    <span className="px-3 py-1 bg-primary/20 text-primary rounded-full text-sm">Rotation</span>
-                                    <span className="px-3 py-1 bg-accent/20 text-accent rounded-full text-sm">Scaling</span>
-                                    <span className="px-3 py-1 bg-primary/20 text-primary rounded-full text-sm">Position</span>
-                                </div>
-                            </Card>
+                    <div
+                        ref={section2Ref}
+                        className="h-screen flex items-center justify-start px-6 md:px-16"
+                    >
+                        <div className="max-w-sm pointer-events-auto card-editorial p-6">
+                            <p className="font-mono text-xs text-[var(--fg-dim)] uppercase tracking-wider mb-3">
+                                02 — drift
+                            </p>
+                            <h3 className="font-display text-3xl text-[var(--fg)] mb-3 leading-tight">
+                                It rotates and translates.
+                            </h3>
+                            <p className="text-sm text-[var(--fg-muted)] leading-relaxed mb-4">
+                                Two full rotations on each axis, position offsets
+                                to (2, 1), and a scale pulse to 1.5×. All
+                                interpolated against scroll velocity.
+                            </p>
+                            <div className="flex flex-wrap gap-1.5">
+                                {['rotation', 'translation', 'scale'].map((t) => (
+                                    <span
+                                        key={t}
+                                        className="font-mono text-[10px] px-2 py-0.5 border border-[var(--hairline-strong)] rounded-full text-[var(--fg-muted)]"
+                                    >
+                                        {t}
+                                    </span>
+                                ))}
+                            </div>
                         </div>
                     </div>
 
-                    {/* Preview Card - Particle Ring */}
-                    <div ref={particleCardRef} className="h-screen flex items-center justify-center px-8">
-                        <Link href="/three-lab/particle-ring" className="pointer-events-auto group">
-                            <div className="relative overflow-hidden rounded-2xl border-2 border-cyan-500/30 hover:border-cyan-500/60 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-cyan-500/20">
-                                <div className="absolute inset-0 bg-linear-to-br from-slate-900 via-slate-800 to-slate-900">
-                                    <div className="absolute inset-0 opacity-30">
-                                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-cyan-500 rounded-full blur-3xl animate-pulse" />
-                                        <div className="absolute top-1/4 left-1/4 w-24 h-24 bg-blue-500 rounded-full blur-2xl animate-pulse delay-75" />
-                                    </div>
-                                </div>
-                                <div className="relative p-8 backdrop-blur-sm">
-                                    <div className="flex items-center gap-3 mb-4">
-                                        <Sparkles className="w-8 h-8 text-cyan-400" />
-                                        <h3 className="text-2xl font-bold text-slate-200">Particle Ring</h3>
-                                    </div>
-                                    <p className="text-slate-300 mb-6 leading-relaxed">
-                                        Rotating particle system forming mesmerizing concentric rings.
-                                        Interactive orbit controls with smooth animations.
-                                    </p>
-                                    <div className="flex gap-2 flex-wrap mb-4">
-                                        <span className="px-3 py-1 bg-cyan-500/20 text-cyan-400 rounded-full text-sm border border-cyan-500/30">Particles</span>
-                                        <span className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full text-sm border border-blue-500/30">Interactive</span>
-                                        <span className="px-3 py-1 bg-purple-500/20 text-purple-400 rounded-full text-sm border border-purple-500/30">3D Rings</span>
-                                    </div>
-                                    <div className="flex items-center gap-2 text-cyan-400 group-hover:gap-4 transition-all">
-                                        <span className="font-medium">Explore â†’</span>
-                                    </div>
-                                </div>
-                                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                                    <div className="absolute inset-0 bg-linear-to-r from-transparent via-cyan-500/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-                                </div>
+                    {/* Particle Ring promo */}
+                    <div className="h-screen flex items-center justify-center px-6">
+                        <Link
+                            href="/three-lab/particle-ring"
+                            className="pointer-events-auto group block max-w-md"
+                        >
+                            <div className="card-editorial p-8 hover:border-[var(--accent)] transition-colors">
+                                <p className="font-mono text-xs text-[var(--fg-dim)] uppercase tracking-wider mb-3">
+                                    aside · 02 / 04
+                                </p>
+                                <h3 className="font-display text-3xl text-[var(--fg)] group-hover:text-[var(--accent)] transition-colors mb-3 leading-tight">
+                                    Particle Ring
+                                </h3>
+                                <p className="text-sm text-[var(--fg-muted)] leading-relaxed mb-5">
+                                    Six thousand GPU particles on three concentric
+                                    rings, displaced by your cursor through a
+                                    custom GLSL shader.
+                                </p>
+                                <span className="inline-flex items-center gap-2 text-sm text-[var(--fg)] group-hover:text-[var(--accent)] transition-colors">
+                                    Open
+                                    <ArrowUpRight className="w-4 h-4 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 transition-transform" />
+                                </span>
                             </div>
                         </Link>
                     </div>
 
-                    {/* Section 3 */}
-                    <div ref={section3Ref} className="h-screen flex items-center justify-end px-8 md:px-16">
-                        <div className="max-w-md pointer-events-auto">
-                            <Card className="bg-background/90 backdrop-blur-lg border-2 border-primary/30">
-                                <div className="flex items-center gap-2 mb-4">
-                                    <LayersIcon className="w-6 h-6 text-accent" />
-                                    <h3 className="text-2xl font-bold text-foreground">Pavement Structure</h3>
-                                </div>
-                                <p className="text-foreground/80 leading-relaxed mb-4">
-                                    Watch as the pavement layers appear one by one, revealing
-                                    the complex structure of modern road engineering.
-                                </p>
-                                <div className="space-y-2">
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-4 h-4 bg-gray-800 rounded" />
-                                        <span className="text-sm text-foreground/70">Asphalt Layer</span>
+                    {/* Section 3 — Pavement */}
+                    <div
+                        ref={section3Ref}
+                        className="h-screen flex items-center justify-end px-6 md:px-16"
+                    >
+                        <div className="max-w-sm pointer-events-auto card-editorial p-6">
+                            <p className="font-mono text-xs text-[var(--fg-dim)] uppercase tracking-wider mb-3">
+                                03 — domain
+                            </p>
+                            <h3 className="font-display text-3xl text-[var(--fg)] mb-3 leading-tight">
+                                Pavement structure.
+                            </h3>
+                            <p className="text-sm text-[var(--fg-muted)] leading-relaxed mb-4">
+                                The four layers of a flexible pavement, in
+                                cross-section. Surface, base, subbase, subgrade.
+                            </p>
+                            <div className="space-y-1.5">
+                                {[
+                                    { label: 'Asphalt', color: '#1f2937', detail: '5–10 cm' },
+                                    { label: 'Base', color: '#a16207', detail: '15–30 cm' },
+                                    { label: 'Subbase', color: '#d97706', detail: '20–40 cm' },
+                                    { label: 'Subgrade', color: '#9a3412', detail: 'natural soil' },
+                                ].map((l) => (
+                                    <div
+                                        key={l.label}
+                                        className="flex items-center justify-between text-xs"
+                                    >
+                                        <div className="flex items-center gap-2">
+                                            <span
+                                                className="w-3 h-3 rounded-sm"
+                                                style={{ background: l.color }}
+                                            />
+                                            <span className="text-[var(--fg)]">
+                                                {l.label}
+                                            </span>
+                                        </div>
+                                        <span className="font-mono text-[var(--fg-dim)]">
+                                            {l.detail}
+                                        </span>
                                     </div>
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-4 h-4 bg-yellow-700 rounded" />
-                                        <span className="text-sm text-foreground/70">Base Layer</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-4 h-4 bg-amber-600 rounded" />
-                                        <span className="text-sm text-foreground/70">Subbase Layer</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-4 h-4 bg-orange-900 rounded" />
-                                        <span className="text-sm text-foreground/70">Subgrade</span>
-                                    </div>
-                                </div>
-                            </Card>
+                                ))}
+                            </div>
                         </div>
                     </div>
 
-                    {/* Preview Card - Futuristic Dashboard */}
-                    <div ref={moreCardRef} className="h-screen flex items-center justify-center px-8">
-                        <Link href="/three-lab/futuristic-dashboard" className="pointer-events-auto group">
-                            <div className="relative overflow-hidden rounded-2xl border-2 border-purple-500/30 hover:border-purple-500/60 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/20">
-                                <div className="absolute inset-0 bg-linear-to-br from-slate-900 via-slate-800 to-slate-900">
-                                    <div className="absolute inset-0 opacity-30">
-                                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-purple-500 rounded-full blur-3xl animate-pulse" />
-                                        <div className="absolute top-1/4 left-1/4 w-24 h-24 bg-pink-500 rounded-full blur-2xl animate-pulse delay-75" />
-                                    </div>
-                                </div>
-                                <div className="relative p-8 backdrop-blur-sm">
-                                    <div className="flex items-center gap-3 mb-4">
-                                        <Rocket className="w-8 h-8 text-purple-400" />
-                                        <h3 className="text-2xl font-bold text-slate-200">Futuristic Dashboard</h3>
-                                    </div>
-                                    <p className="text-slate-300 mb-6 leading-relaxed">
-                                        Interactive 3D dashboard with floating geometric shapes, holographic rings,
-                                        distorted spheres, and pulsing light orbs in a tech-inspired environment.
-                                    </p>
-                                    <div className="flex gap-2 flex-wrap mb-4">
-                                        <span className="px-3 py-1 bg-purple-500/20 text-purple-400 rounded-full text-sm border border-purple-500/30">Interactive</span>
-                                        <span className="px-3 py-1 bg-pink-500/20 text-pink-400 rounded-full text-sm border border-pink-500/30">Real-time</span>
-                                        <span className="px-3 py-1 bg-purple-500/20 text-purple-400 rounded-full text-sm border border-purple-500/30">WebGL</span>
-                                    </div>
-                                    <div className="flex items-center gap-2 text-purple-400 group-hover:gap-4 transition-all">
-                                        <span className="font-medium">Explore â†’</span>
-                                    </div>
-                                </div>
-                                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                                    <div className="absolute inset-0 bg-linear-to-r from-transparent via-purple-500/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-                                </div>
+                    {/* Holographic field promo */}
+                    <div className="h-screen flex items-center justify-center px-6">
+                        <Link
+                            href="/three-lab/futuristic-dashboard"
+                            className="pointer-events-auto group block max-w-md"
+                        >
+                            <div className="card-editorial p-8 hover:border-[var(--accent)] transition-colors">
+                                <p className="font-mono text-xs text-[var(--fg-dim)] uppercase tracking-wider mb-3">
+                                    aside · 03 / 04
+                                </p>
+                                <h3 className="font-display text-3xl text-[var(--fg)] group-hover:text-[var(--accent)] transition-colors mb-3 leading-tight">
+                                    Holographic Field
+                                </h3>
+                                <p className="text-sm text-[var(--fg-muted)] leading-relaxed mb-5">
+                                    Distortion shaders, floating geometry,
+                                    environment maps. Hover the spheres, click the
+                                    cubes — every interaction has a state.
+                                </p>
+                                <span className="inline-flex items-center gap-2 text-sm text-[var(--fg)] group-hover:text-[var(--accent)] transition-colors">
+                                    Open
+                                    <ArrowUpRight className="w-4 h-4 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 transition-transform" />
+                                </span>
                             </div>
                         </Link>
                     </div>
 
                     {/* Section 4 */}
-                    <div ref={section4Ref} className="h-screen flex items-center justify-center px-8">
+                    <div
+                        ref={section4Ref}
+                        className="h-screen flex items-center justify-center px-6"
+                    >
                         <div className="max-w-2xl pointer-events-auto text-center">
-                            <Card className="bg-background/90 backdrop-blur-lg border-2 border-accent/30">
-                                <h3 className="text-3xl font-bold text-foreground mb-4">Engineering Visualization</h3>
-                                <p className="text-foreground/80 leading-relaxed mb-6">
-                                    This is just the beginning. Imagine complex structural analysis,
-                                    real-time simulations, and interactive engineering tools powered
-                                    by cutting-edge 3D technology.
-                                </p>
-                                <div className="flex flex-wrap gap-3 justify-center">
-                                    <span className="px-4 py-2 bg-primary/20 text-primary rounded-lg text-sm font-medium">Three.js</span>
-                                    <span className="px-4 py-2 bg-accent/20 text-accent rounded-lg text-sm font-medium">GSAP ScrollTrigger</span>
-                                    <span className="px-4 py-2 bg-primary/20 text-primary rounded-lg text-sm font-medium">React Three Fiber</span>
-                                </div>
-                            </Card>
+                            <Eyebrow className="mb-6">Stack</Eyebrow>
+                            <h3 className="font-display text-4xl md:text-5xl text-[var(--fg)] mb-6 leading-tight">
+                                Camera pulls back. Scene resets.
+                            </h3>
+                            <p className="text-[var(--fg-muted)] leading-relaxed mb-8">
+                                Built with Three.js, React Three Fiber, and GSAP
+                                ScrollTrigger. Every keyframe is scrubbed
+                                bidirectionally — scroll up undoes everything in
+                                reverse.
+                            </p>
+                            <div className="flex flex-wrap gap-2 justify-center">
+                                {[
+                                    'three.js',
+                                    'r3f',
+                                    'gsap',
+                                    'scrolltrigger',
+                                    'webgl',
+                                ].map((t) => (
+                                    <span
+                                        key={t}
+                                        className="font-mono text-xs px-3 py-1 border border-[var(--hairline-strong)] rounded-full text-[var(--fg-muted)]"
+                                    >
+                                        {t}
+                                    </span>
+                                ))}
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* Static Content Below */}
-            <Section className="bg-card/30">
-                <h3 className="text-2xl font-bold text-foreground mb-6 text-center">Traditional 3D Viewers</h3>
-
-                <div className="max-w-xl mx-auto">
-                    <Card>
-                        <div className="flex items-center gap-2 mb-4">
-                            <BoxSelect className="w-5 h-5 text-primary" />
-                            <h3 className="text-xl font-semibold text-foreground">Rotating Object</h3>
-                        </div>
-                        <p className="text-foreground/70 mb-4 text-sm">
-                            Interactive 3D object with orbit controls. Drag to rotate, scroll to zoom.
-                        </p>
-                        <div className="h-96 bg-linear-to-br from-background to-card rounded-lg overflow-hidden">
-                            <Canvas camera={{ position: [0, 0, 5], fov: 50 }}>
-                                <Suspense fallback={null}>
-                                    <ambientLight intensity={0.5} />
-                                    <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} />
-                                    <pointLight position={[-10, -10, -10]} />
-                                    <RotatingCube />
-                                    <OrbitControls />
-                                </Suspense>
-                            </Canvas>
-                        </div>
-                    </Card>
+            {/* Static rotating-cube fallback below */}
+            <section className="px-6 py-24 border-t border-[var(--hairline)]">
+                <div className="max-w-3xl mx-auto">
+                    <Eyebrow className="mb-6">Aside · static viewer</Eyebrow>
+                    <h2 className="font-display text-3xl md:text-4xl text-[var(--fg)] mb-8 leading-tight">
+                        For comparison: the same primitive, no scroll choreography.
+                    </h2>
+                    <div className="aspect-video rounded-xl overflow-hidden border border-[var(--hairline)] bg-[var(--bg-card)]">
+                        <Canvas camera={{ position: [0, 0, 5], fov: 50 }}>
+                            <Suspense fallback={null}>
+                                <ambientLight intensity={0.5} />
+                                <spotLight
+                                    position={[10, 10, 10]}
+                                    angle={0.15}
+                                    penumbra={1}
+                                />
+                                <pointLight
+                                    position={[-10, -10, -10]}
+                                    color="#E8704F"
+                                />
+                                <RotatingCube />
+                                <OrbitControls />
+                            </Suspense>
+                        </Canvas>
+                    </div>
+                    <p className="text-sm text-[var(--fg-muted)] mt-4">
+                        Drag to orbit. Scroll inside to zoom.
+                    </p>
                 </div>
-
-                <div className="grid md:grid-cols-4 gap-6 mt-6">
-                    <Card>
-                        <div className="w-full h-4 bg-gray-800 rounded mb-3" />
-                        <h4 className="font-semibold text-foreground mb-1">Asphalt Layer</h4>
-                        <p className="text-sm text-foreground/70">Surface layer, typically 5-10 cm thick</p>
-                    </Card>
-                    <Card>
-                        <div className="w-full h-4 bg-yellow-700 rounded mb-3" />
-                        <h4 className="font-semibold text-foreground mb-1">Base Layer</h4>
-                        <p className="text-sm text-foreground/70">Crushed stone, 15-30 cm thick</p>
-                    </Card>
-                    <Card>
-                        <div className="w-full h-4 bg-amber-600 rounded mb-3" />
-                        <h4 className="font-semibold text-foreground mb-1">Subbase Layer</h4>
-                        <p className="text-sm text-foreground/70">Granular material, 20-40 cm thick</p>
-                    </Card>
-                    <Card>
-                        <div className="w-full h-4 bg-orange-900 rounded mb-3" />
-                        <h4 className="font-semibold text-foreground mb-1">Subgrade</h4>
-                        <p className="text-sm text-foreground/70">Natural soil foundation</p>
-                    </Card>
-                </div>
-
-                <Card className="mt-6 bg-linear-to-br from-primary/10 to-accent/10">
-                    <h3 className="text-xl font-semibold text-foreground mb-4">Coming Soon</h3>
-                    <ul className="space-y-2 text-foreground/70">
-                        <li className="flex items-start gap-2"><span className="text-primary">âœ¦</span><span>FWD deflection basin visualization in 3D</span></li>
-                        <li className="flex items-start gap-2"><span className="text-accent">âœ¦</span><span>Interactive stress distribution analysis</span></li>
-                        <li className="flex items-start gap-2"><span className="text-primary">âœ¦</span><span>3D product design models and CAD exports</span></li>
-                        <li className="flex items-start gap-2"><span className="text-accent">âœ¦</span><span>Real-time engineering simulations</span></li>
-                    </ul>
-                </Card>
-            </Section>
+            </section>
         </div>
     );
 }
 
-// â”€â”€â”€ Scroll Scene â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Scroll Scene ────────────────────────────────────────────────────────────
 
 interface ScrollSceneProps {
     section1Ref: React.RefObject<HTMLDivElement | null>;
@@ -407,120 +324,172 @@ interface ScrollSceneProps {
     section4Ref: React.RefObject<HTMLDivElement | null>;
 }
 
-function ScrollScene({ section1Ref, section2Ref, section3Ref, section4Ref }: ScrollSceneProps) {
+function ScrollScene({
+    section1Ref,
+    section2Ref,
+    section3Ref,
+    section4Ref,
+}: ScrollSceneProps) {
     const cubeRef = useRef<THREE.Mesh>(null);
-    const layersGroupRef = useRef<THREE.Group>(null);
     const { camera } = useThree();
 
     useEffect(() => {
-        if (!cubeRef.current || !layersGroupRef.current) return;
-
+        if (!cubeRef.current) return;
         const cube = cubeRef.current;
 
         if (section1Ref.current) {
-            gsap.fromTo(cube.rotation, { x: 0, y: 0, z: 0 }, {
-                x: Math.PI * 0.5, y: Math.PI * 0.5, z: 0,
-                scrollTrigger: { trigger: section1Ref.current, start: 'top bottom', end: 'bottom top', scrub: 1 },
-            });
-            gsap.fromTo(cube.scale, { x: 0.1, y: 0.1, z: 0.1 }, {
-                x: 1, y: 1, z: 1,
-                scrollTrigger: { trigger: section1Ref.current, start: 'top center', end: 'center center', scrub: 1 },
-            });
+            gsap.fromTo(
+                cube.rotation,
+                { x: 0, y: 0, z: 0 },
+                {
+                    x: Math.PI * 0.5,
+                    y: Math.PI * 0.5,
+                    scrollTrigger: {
+                        trigger: section1Ref.current,
+                        start: 'top bottom',
+                        end: 'bottom top',
+                        scrub: 1,
+                    },
+                }
+            );
+            gsap.fromTo(
+                cube.scale,
+                { x: 0.1, y: 0.1, z: 0.1 },
+                {
+                    x: 1,
+                    y: 1,
+                    z: 1,
+                    scrollTrigger: {
+                        trigger: section1Ref.current,
+                        start: 'top center',
+                        end: 'center center',
+                        scrub: 1,
+                    },
+                }
+            );
         }
 
         if (section2Ref.current) {
             gsap.to(cube.rotation, {
-                x: Math.PI * 2, y: Math.PI * 2, z: Math.PI * 0.5,
-                scrollTrigger: { trigger: section2Ref.current, start: 'top bottom', end: 'bottom top', scrub: 1 },
+                x: Math.PI * 2,
+                y: Math.PI * 2,
+                z: Math.PI * 0.5,
+                scrollTrigger: {
+                    trigger: section2Ref.current,
+                    start: 'top bottom',
+                    end: 'bottom top',
+                    scrub: 1,
+                },
             });
             gsap.to(cube.position, {
-                x: 2, y: 1,
-                scrollTrigger: { trigger: section2Ref.current, start: 'top center', end: 'bottom center', scrub: 1 },
+                x: 2,
+                y: 1,
+                scrollTrigger: {
+                    trigger: section2Ref.current,
+                    start: 'top center',
+                    end: 'bottom center',
+                    scrub: 1,
+                },
             });
             gsap.to(cube.scale, {
-                x: 1.5, y: 1.5, z: 1.5,
-                scrollTrigger: { trigger: section2Ref.current, start: 'top center', end: 'center center', scrub: 1 },
+                x: 1.5,
+                y: 1.5,
+                z: 1.5,
+                scrollTrigger: {
+                    trigger: section2Ref.current,
+                    start: 'top center',
+                    end: 'center center',
+                    scrub: 1,
+                },
             });
         }
 
         if (section3Ref.current) {
             gsap.to(cube.scale, {
-                x: 0.1, y: 0.1, z: 0.1,
-                scrollTrigger: { trigger: section3Ref.current, start: 'top center', end: 'bottom center', scrub: 1 },
+                x: 0.1,
+                y: 0.1,
+                z: 0.1,
+                scrollTrigger: {
+                    trigger: section3Ref.current,
+                    start: 'top center',
+                    end: 'bottom center',
+                    scrub: 1,
+                },
             });
             gsap.to(cube.position, {
-                x: 0, y: 0,
-                scrollTrigger: { trigger: section3Ref.current, start: 'top center', end: 'bottom center', scrub: 1 },
+                x: 0,
+                y: 0,
+                scrollTrigger: {
+                    trigger: section3Ref.current,
+                    start: 'top center',
+                    end: 'bottom center',
+                    scrub: 1,
+                },
             });
         }
 
         if (section4Ref.current) {
             gsap.to(camera.position, {
-                z: 12, y: 5,
-                scrollTrigger: { trigger: section4Ref.current, start: 'top center', end: 'center center', scrub: 1 },
+                z: 12,
+                y: 5,
+                scrollTrigger: {
+                    trigger: section4Ref.current,
+                    start: 'top center',
+                    end: 'center center',
+                    scrub: 1,
+                },
             });
             gsap.to(cube.rotation, {
-                x: Math.PI * 3, y: Math.PI * 3,
-                scrollTrigger: { trigger: section4Ref.current, start: 'top center', end: 'bottom center', scrub: 1 },
+                x: Math.PI * 3,
+                y: Math.PI * 3,
+                scrollTrigger: {
+                    trigger: section4Ref.current,
+                    start: 'top center',
+                    end: 'bottom center',
+                    scrub: 1,
+                },
             });
         }
 
-        return () => { ScrollTrigger.getAll().forEach(t => t.kill()); };
+        return () => {
+            ScrollTrigger.getAll().forEach((t) => t.kill());
+        };
     }, [section1Ref, section2Ref, section3Ref, section4Ref, camera]);
 
     return (
         <>
             <mesh ref={cubeRef}>
                 <boxGeometry args={[2, 2, 2]} />
-                <meshStandardMaterial color="#2563EB" metalness={0.6} roughness={0.2} />
+                <meshStandardMaterial
+                    color="#E8704F"
+                    metalness={0.4}
+                    roughness={0.3}
+                />
             </mesh>
-            <group ref={layersGroupRef} visible={false}>
-                <PavementLayers />
-            </group>
-            <gridHelper args={[20, 20, '#334155', '#1e293b']} position={[0, -3, 0]} />
+            <gridHelper
+                args={[20, 20, '#3a352b', '#1f1d18']}
+                position={[0, -3, 0]}
+            />
         </>
     );
 }
 
-// â”€â”€â”€ Rotating Cube â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
 function RotatingCube() {
     const meshRef = useRef<THREE.Mesh>(null);
-
     useFrame((_, delta) => {
         if (meshRef.current) {
             meshRef.current.rotation.x += delta * 0.5;
             meshRef.current.rotation.y += delta * 0.7;
         }
     });
-
     return (
         <mesh ref={meshRef} rotation={[0.5, 0.5, 0]}>
             <boxGeometry args={[2, 2, 2]} />
-            <meshStandardMaterial color="#2563EB" metalness={0.5} roughness={0.2} />
+            <meshStandardMaterial
+                color="#E8704F"
+                metalness={0.5}
+                roughness={0.25}
+            />
         </mesh>
     );
 }
-
-// â”€â”€â”€ Pavement Layers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
-function PavementLayers() {
-    const layers: { color: string; position: [number, number, number]; height: number }[] = [
-        { color: '#1f2937', position: [0, 1.5, 0], height: 0.3 },
-        { color: '#a16207', position: [0, 0.9, 0], height: 0.6 },
-        { color: '#d97706', position: [0, 0.0, 0], height: 0.9 },
-        { color: '#9a3412', position: [0, -1.2, 0], height: 1.2 },
-    ];
-
-    return (
-        <group>
-            {layers.map((layer, i) => (
-                <mesh key={i} position={layer.position}>
-                    <boxGeometry args={[4, layer.height, 4]} />
-                    <meshStandardMaterial color={layer.color} />
-                </mesh>
-            ))}
-        </group>
-    );
-}
-

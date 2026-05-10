@@ -1,7 +1,6 @@
 'use client';
 
-import { Section, SectionTitle, Card } from '@/components/UI';
-import { TrendingUp, MapPin, Activity, Layers } from 'lucide-react';
+import { Eyebrow } from '@/components/UI';
 import {
     dashboardStats,
     frictionDistribution,
@@ -17,221 +16,271 @@ import {
     YAxis,
     CartesianGrid,
     Tooltip,
-    Legend,
     ResponsiveContainer,
 } from 'recharts';
 
+// Editorial chart theme
+const TICK = { fill: '#A39D8F', fontSize: 11, fontFamily: 'var(--font-jetbrains-mono)' };
+const AXIS = { stroke: '#3a352b' };
+const GRID = '#2a261f';
+const TOOLTIP_STYLE = {
+    backgroundColor: '#15140F',
+    border: '1px solid rgba(245, 241, 234, 0.16)',
+    borderRadius: '6px',
+    color: '#F5F1EA',
+    fontFamily: 'var(--font-jetbrains-mono)',
+    fontSize: '12px',
+};
+const TOOLTIP_ITEM_STYLE = { color: '#F5F1EA' };
+const TOOLTIP_LABEL_STYLE = { color: '#A39D8F', fontSize: '10px', textTransform: 'uppercase' as const, letterSpacing: '0.1em' };
+
 export default function DashboardPage() {
     return (
-        <div className="min-h-screen py-16">
-            <Section>
-                <SectionTitle subtitle="Infrastructure data analytics and insights">
-                    Analytics Dashboard
-                </SectionTitle>
+        <div className="px-6 pt-24 md:pt-32 pb-32">
+            <div className="max-w-6xl mx-auto">
+                <Eyebrow className="mb-6">Analytics</Eyebrow>
+                <h1 className="font-display text-5xl md:text-7xl text-[var(--fg)] leading-[0.98] mb-6 max-w-3xl">
+                    Numbers from the field.
+                </h1>
+                <p className="text-lg text-[var(--fg-muted)] max-w-2xl leading-relaxed mb-16">
+                    Synthetic pavement-survey data, visualized the way the real
+                    dashboards do it. Friction, crack density, coverage, quality —
+                    plus the four sensor families behind every number.
+                </p>
 
-                {/* Stats Cards */}
-                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-                    <StatCard
-                        icon={<MapPin className="w-8 h-8" />}
-                        title="Total Road Length"
-                        value={`${dashboardStats.totalRoadLength.toLocaleString()} m`}
-                        change="+12%"
-                        color="primary"
-                    />
-                    <StatCard
-                        icon={<Activity className="w-8 h-8" />}
-                        title="Average Friction"
-                        value={dashboardStats.averageFriction.toFixed(2)}
-                        change="-3%"
-                        color="accent"
-                    />
-                    <StatCard
-                        icon={<TrendingUp className="w-8 h-8" />}
-                        title="Crack Density"
-                        value={`${dashboardStats.averageCrackDensity.toFixed(1)} m/m²`}
-                        change="+5%"
-                        color="primary"
-                    />
-                    <StatCard
-                        icon={<Layers className="w-8 h-8" />}
-                        title="Sections Analyzed"
-                        value={dashboardStats.sectionsAnalyzed.toString()}
-                        change="+2"
-                        color="accent"
-                    />
-                </div>
+                {/* Stats — editorial row */}
+                <ul className="border-t border-[var(--hairline)] mb-20">
+                    {[
+                        {
+                            label: 'Total road length',
+                            value: `${dashboardStats.totalRoadLength.toLocaleString()}`,
+                            unit: 'm',
+                            change: '+12%',
+                            positive: true,
+                        },
+                        {
+                            label: 'Average friction',
+                            value: dashboardStats.averageFriction.toFixed(2),
+                            unit: 'μ',
+                            change: '−3%',
+                            positive: false,
+                        },
+                        {
+                            label: 'Crack density',
+                            value: dashboardStats.averageCrackDensity.toFixed(1),
+                            unit: 'm/m²',
+                            change: '+5%',
+                            positive: true,
+                        },
+                        {
+                            label: 'Sections analysed',
+                            value: dashboardStats.sectionsAnalyzed.toString(),
+                            unit: '',
+                            change: '+2',
+                            positive: true,
+                        },
+                    ].map((s) => (
+                        <li
+                            key={s.label}
+                            className="grid grid-cols-12 gap-4 items-baseline py-6 border-b border-[var(--hairline)]"
+                        >
+                            <span className="col-span-12 md:col-span-4 text-xs uppercase tracking-[0.18em] text-[var(--fg-muted)]">
+                                {s.label}
+                            </span>
+                            <span className="col-span-8 md:col-span-6 font-display text-4xl md:text-5xl text-[var(--fg)] leading-none">
+                                {s.value}
+                                {s.unit && (
+                                    <span className="font-mono text-sm text-[var(--fg-dim)] ml-2 align-middle">
+                                        {s.unit}
+                                    </span>
+                                )}
+                            </span>
+                            <span
+                                className={`col-span-4 md:col-span-2 text-right font-mono text-sm tabular-nums ${s.positive ? 'text-[var(--accent)]' : 'text-[var(--fg-dim)]'
+                                    }`}
+                            >
+                                {s.change}
+                            </span>
+                        </li>
+                    ))}
+                </ul>
 
-                {/* Charts Grid */}
-                <div className="grid md:grid-cols-2 gap-6 mb-6">
-                    {/* Friction Distribution */}
-                    <Card>
-                        <h3 className="text-xl font-semibold text-foreground mb-6">
-                            Friction Distribution
-                        </h3>
-                        <ResponsiveContainer width="100%" height={300}>
+                {/* Two charts side-by-side */}
+                <div className="grid md:grid-cols-2 gap-12 mb-20">
+                    <ChartBlock
+                        eyebrow="Friction · histogram"
+                        title="How the road grips."
+                        subtitle="Friction values bucketed across the network. Lower values mean rework — usually the wet-weather problem segments."
+                    >
+                        <ResponsiveContainer width="100%" height={280}>
                             <BarChart data={frictionDistribution}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                                <XAxis dataKey="range" stroke="#E2E8F0" />
-                                <YAxis stroke="#E2E8F0" />
+                                <CartesianGrid strokeDasharray="2 4" stroke={GRID} />
+                                <XAxis dataKey="range" {...AXIS} tick={TICK} />
+                                <YAxis {...AXIS} tick={TICK} />
                                 <Tooltip
-                                    contentStyle={{
-                                        backgroundColor: '#1E293B',
-                                        border: '1px solid #2563EB',
-                                        borderRadius: '8px',
-                                    }}
+                                    contentStyle={TOOLTIP_STYLE}
+                                    itemStyle={TOOLTIP_ITEM_STYLE}
+                                    labelStyle={TOOLTIP_LABEL_STYLE}
+                                    cursor={{ fill: 'rgba(232, 112, 79, 0.06)' }}
                                 />
-                                <Bar dataKey="count" fill="#2563EB" radius={[8, 8, 0, 0]} />
+                                <Bar dataKey="count" fill="#E8704F" radius={[2, 2, 0, 0]} />
                             </BarChart>
                         </ResponsiveContainer>
-                    </Card>
+                    </ChartBlock>
 
-                    {/* Crack Density Histogram */}
-                    <Card>
-                        <h3 className="text-xl font-semibold text-foreground mb-6">
-                            Crack Density Distribution
-                        </h3>
-                        <ResponsiveContainer width="100%" height={300}>
+                    <ChartBlock
+                        eyebrow="Cracks · density"
+                        title="How much it's failing."
+                        subtitle="Crack density in metres of crack per square metre of pavement. Right tail is the truly tired sections."
+                    >
+                        <ResponsiveContainer width="100%" height={280}>
                             <BarChart data={crackDensityData}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                                <XAxis dataKey="density" stroke="#E2E8F0" />
-                                <YAxis stroke="#E2E8F0" />
+                                <CartesianGrid strokeDasharray="2 4" stroke={GRID} />
+                                <XAxis dataKey="density" {...AXIS} tick={TICK} />
+                                <YAxis {...AXIS} tick={TICK} />
                                 <Tooltip
-                                    contentStyle={{
-                                        backgroundColor: '#1E293B',
-                                        border: '1px solid #06B6D4',
-                                        borderRadius: '8px',
-                                    }}
+                                    contentStyle={TOOLTIP_STYLE}
+                                    itemStyle={TOOLTIP_ITEM_STYLE}
+                                    labelStyle={TOOLTIP_LABEL_STYLE}
+                                    cursor={{ fill: 'rgba(122, 196, 217, 0.06)' }}
                                 />
-                                <Bar dataKey="count" fill="#06B6D4" radius={[8, 8, 0, 0]} />
+                                <Bar dataKey="count" fill="#7AC4D9" radius={[2, 2, 0, 0]} />
                             </BarChart>
                         </ResponsiveContainer>
-                    </Card>
+                    </ChartBlock>
                 </div>
 
-                {/* Coverage Over Time */}
-                <Card className="mb-6">
-                    <h3 className="text-xl font-semibold text-foreground mb-6">
-                        Survey Coverage Over Time
-                    </h3>
+                {/* Coverage line chart */}
+                <ChartBlock
+                    eyebrow="Coverage · time series"
+                    title="How fast we surveyed."
+                    subtitle="Cumulative road length covered, month by month. Spikes are the big mobilisation weeks."
+                    className="mb-20"
+                >
                     <ResponsiveContainer width="100%" height={300}>
                         <LineChart data={coverageData}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                            <XAxis dataKey="month" stroke="#E2E8F0" />
-                            <YAxis stroke="#E2E8F0" />
+                            <CartesianGrid strokeDasharray="2 4" stroke={GRID} />
+                            <XAxis dataKey="month" {...AXIS} tick={TICK} />
+                            <YAxis {...AXIS} tick={TICK} />
                             <Tooltip
-                                contentStyle={{
-                                    backgroundColor: '#1E293B',
-                                    border: '1px solid #2563EB',
-                                    borderRadius: '8px',
-                                }}
+                                contentStyle={TOOLTIP_STYLE}
+                                itemStyle={TOOLTIP_ITEM_STYLE}
+                                labelStyle={TOOLTIP_LABEL_STYLE}
+                                cursor={{ stroke: '#E8704F', strokeWidth: 1, strokeDasharray: '3 3' }}
                             />
-                            <Legend />
                             <Line
                                 type="monotone"
                                 dataKey="length"
-                                stroke="#2563EB"
-                                strokeWidth={3}
-                                dot={{ fill: '#2563EB', r: 6 }}
-                                name="Road Length (m)"
+                                stroke="#E8704F"
+                                strokeWidth={2}
+                                dot={{ fill: '#E8704F', r: 3, strokeWidth: 0 }}
+                                activeDot={{ fill: '#E8B14F', r: 5, strokeWidth: 0 }}
+                                name="Road length (m)"
                             />
                         </LineChart>
                     </ResponsiveContainer>
-                </Card>
+                </ChartBlock>
 
-                {/* Data Summary */}
-                <div className="grid md:grid-cols-3 gap-6">
-                    <Card>
-                        <h4 className="text-sm font-medium text-foreground/70 mb-2">
-                            Survey Technologies
-                        </h4>
+                {/* Bottom three columns — editorial */}
+                <div className="grid md:grid-cols-3 gap-12 border-t border-[var(--hairline)] pt-16">
+                    <div>
+                        <Eyebrow className="mb-5">Sensor stack</Eyebrow>
                         <ul className="space-y-2">
-                            {['LCMS', 'CFT', 'FWD', 'GPR'].map((tech) => (
+                            {[
+                                { name: 'LCMS', detail: 'Laser crack measurement' },
+                                { name: 'CFT', detail: 'Continuous friction tester' },
+                                { name: 'FWD', detail: 'Falling weight deflectometer' },
+                                { name: 'GPR', detail: 'Ground-penetrating radar' },
+                            ].map((s) => (
                                 <li
-                                    key={tech}
-                                    className="flex items-center justify-between text-foreground"
+                                    key={s.name}
+                                    className="flex items-baseline justify-between border-b border-[var(--hairline)] py-2"
                                 >
-                                    <span>{tech}</span>
-                                    <span className="text-primary">✓</span>
+                                    <span className="text-sm text-[var(--fg)]">{s.name}</span>
+                                    <span className="font-mono text-[10px] uppercase tracking-wider text-[var(--fg-dim)]">
+                                        {s.detail}
+                                    </span>
                                 </li>
                             ))}
                         </ul>
-                    </Card>
+                    </div>
 
-                    <Card>
-                        <h4 className="text-sm font-medium text-foreground/70 mb-2">
-                            Data Quality
-                        </h4>
-                        <div className="space-y-3">
-                            <QualityBar label="Completeness" value={95} />
-                            <QualityBar label="Accuracy" value={92} />
-                            <QualityBar label="Consistency" value={88} />
-                        </div>
-                    </Card>
+                    <div>
+                        <Eyebrow className="mb-5">Data quality</Eyebrow>
+                        <ul className="space-y-4">
+                            <QualityRow label="Completeness" value={95} />
+                            <QualityRow label="Accuracy" value={92} />
+                            <QualityRow label="Consistency" value={88} />
+                        </ul>
+                    </div>
 
-                    <Card>
-                        <h4 className="text-sm font-medium text-foreground/70 mb-2">
-                            Recent Activity
-                        </h4>
-                        <div className="space-y-2 text-sm text-foreground/70">
-                            <p>✓ CFT data processed</p>
-                            <p>✓ LCMS analysis completed</p>
-                            <p>✓ Reports generated</p>
-                            <p>✓ Data exported</p>
-                        </div>
-                    </Card>
+                    <div>
+                        <Eyebrow className="mb-5">Activity</Eyebrow>
+                        <ul className="space-y-3">
+                            {[
+                                'CFT data processed',
+                                'LCMS analysis completed',
+                                'Reports generated',
+                                'Data exported to GeoJSON',
+                            ].map((a) => (
+                                <li
+                                    key={a}
+                                    className="text-sm text-[var(--fg-muted)] flex gap-3"
+                                >
+                                    <span className="text-[var(--accent)] shrink-0">—</span>
+                                    <span>{a}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
                 </div>
-            </Section>
+            </div>
         </div>
     );
 }
 
-interface StatCardProps {
-    icon: React.ReactNode;
+function ChartBlock({
+    eyebrow,
+    title,
+    subtitle,
+    children,
+    className = '',
+}: {
+    eyebrow: string;
     title: string;
-    value: string;
-    change: string;
-    color: 'primary' | 'accent';
-}
-
-function StatCard({ icon, title, value, change, color }: StatCardProps) {
-    const isPositive = change.startsWith('+');
-    const colorClass = color === 'primary' ? 'text-primary' : 'text-accent';
-
+    subtitle: string;
+    children: React.ReactNode;
+    className?: string;
+}) {
     return (
-        <Card hover={false}>
-            <div className="flex items-start justify-between mb-4">
-                <div className={colorClass}>{icon}</div>
-                <span
-                    className={`text-sm font-medium ${isPositive ? 'text-green-400' : 'text-red-400'
-                        }`}
-                >
-                    {change}
-                </span>
+        <div className={className}>
+            <Eyebrow className="mb-3">{eyebrow}</Eyebrow>
+            <h3 className="font-display text-2xl md:text-3xl text-[var(--fg)] leading-tight mb-2">
+                {title}
+            </h3>
+            <p className="text-sm text-[var(--fg-muted)] mb-6 max-w-md">{subtitle}</p>
+            <div className="border border-[var(--hairline)] rounded-lg bg-[var(--bg-card)] p-4">
+                {children}
             </div>
-            <h3 className="text-sm text-foreground/70 mb-1">{title}</h3>
-            <p className="text-3xl font-bold text-foreground">{value}</p>
-        </Card>
+        </div>
     );
 }
 
-interface QualityBarProps {
-    label: string;
-    value: number;
-}
-
-function QualityBar({ label, value }: QualityBarProps) {
+function QualityRow({ label, value }: { label: string; value: number }) {
     return (
-        <div>
-            <div className="flex items-center justify-between mb-1">
-                <span className="text-sm text-foreground">{label}</span>
-                <span className="text-sm text-foreground/70">{value}%</span>
+        <li>
+            <div className="flex items-baseline justify-between mb-2">
+                <span className="text-sm text-[var(--fg)]">{label}</span>
+                <span className="font-mono text-xs text-[var(--fg-dim)] tabular-nums">
+                    {value}
+                </span>
             </div>
-            <div className="h-2 bg-card rounded-full overflow-hidden">
+            <div className="h-px bg-[var(--hairline)] relative overflow-hidden">
                 <div
-                    className="h-full bg-linear-to-r from-primary to-accent rounded-full"
+                    className="absolute left-0 top-0 h-full bg-[var(--accent)] transition-[width] duration-700"
                     style={{ width: `${value}%` }}
                 />
             </div>
-        </div>
+        </li>
     );
 }

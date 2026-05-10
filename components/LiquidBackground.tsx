@@ -10,7 +10,7 @@ const SIM = 512;
 const STROKE_WIDTH = 2.0;   // px —  width of the line drawn by the cursor
 const MOUSE_STRENGTH = 20;    // multiplier on mouse speed → wave depth (was 45)
 const WAVE_INJECTION = 0.25;  // how much disturbance feeds into the wave sim (was 0.5)
-const WAVE_DAMPING = 0.962; // 0.99 = long-lived rings, 0.90 = die quickly (was 0.975)
+const WAVE_DAMPING = 0.985; // 0.99 = long-lived rings, 0.90 = die quickly (was 0.975)
 
 // ── Shared vertex shader (maps plane to clip space) ────────────────────────
 const quadVert = /* glsl */`
@@ -78,11 +78,22 @@ void main() {
   gl_FragColor = vec4(clamp(next, -1.0, 1.0), curr, 0.0, 1.0);
 }`;
 
-// ── Display: height-field → normals → blue-water shading ──────────────────
+// ── Display: height-field → normals → blue-water shading + iridescence ────
 const displayFrag = /* glsl */`
 uniform sampler2D tWave;
 uniform vec2      res;
 varying vec2      vUv;
+
+/*
+// Maps 0..1 to a full spectral rainbow (cosine palette)
+vec3 rainbow(float t) {
+  return vec3(
+    0.5 + 0.5 * cos(6.2832 * (t        )),
+    0.5 + 0.5 * cos(6.2832 * (t + 0.333)),
+    0.5 + 0.5 * cos(6.2832 * (t + 0.667))
+  );
+}
+*/
 
 void main() {
   vec2  px  = 2.0 / res;
@@ -96,11 +107,24 @@ void main() {
   float diff   = max(dot(normal, light), 0.0);
   float spec   = pow(max(dot(normalize(light + vec3(0,0,1)), normal), 0.0), 160.0);
 
-  float h    = texture2D(tWave, vUv).r;
+  float h = texture2D(tWave, vUv).r;
+
+  /*
+  // ── Iridescence: thin-film rainbow on wave slopes ────────────────────────
+  // slope = steepness of the wave surface (flat water = 0, steep sides = high)
+  float slope   = length(normal.xy);
+  // angle of the slope direction maps to a hue, shifted slightly by height
+  float hue     = atan(normal.y, normal.x) / 6.2832 + 0.5 + h * 1.5;
+  vec3  iriCol  = rainbow(hue);
+  // mask: only visible on active wave slopes, fades on calm water
+  float iriMask = clamp(slope * abs(h) * 14.0, 0.0, 1.0);
+  */
+
   // Dark water surface — barely visible diffuse, bright white specular only
   vec3  col  = diff * vec3(0.03, 0.04, 0.06)   // near-black dark water surface
-             + spec * vec3(1.0,  1.0,  1.0);   // pure white specular glint (like liquid.webp)
-  float a    = min(abs(h) * 4.0 + spec * 1.2, 0.75);
+             + spec * vec3(1.0,  1.0,  1.0);   // pure white specular glint
+             /* + iriCol * iriMask * 0.35; */   // subtle rainbow sheen on ripple edges (commented)
+  float a    = min(abs(h) * 4.0 + spec * 1.2 /* + iriMask * 0.25 */, 0.75);
   gl_FragColor = vec4(col, a);
 }`;
 

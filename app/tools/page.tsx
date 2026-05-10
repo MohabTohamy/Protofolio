@@ -1,137 +1,120 @@
 'use client';
 
 import { useState } from 'react';
-import { Section, SectionTitle, Card, Button } from '@/components/UI';
-import { Calculator, FileSpreadsheet, MapPin, Copy, Check } from 'lucide-react';
+import { Eyebrow, Button } from '@/components/UI';
+import { ArrowRight, Copy, Check } from 'lucide-react';
 import { splitLength, repeatRows } from '@/lib/utils';
+
+const inputCls =
+    'w-full bg-transparent border-0 border-b border-[var(--hairline-strong)] py-2 text-[var(--fg)] focus:outline-none focus:border-[var(--accent)] transition-colors placeholder:text-[var(--fg-dim)]';
 
 export default function ToolsPage() {
     return (
-        <div className="min-h-screen py-16">
-            <Section>
-                <SectionTitle subtitle="Interactive engineering utilities">
-                    Engineering Tools
-                </SectionTitle>
+        <div className="px-6 pt-24 md:pt-32 pb-32">
+            <div className="max-w-6xl mx-auto mb-20">
+                <Eyebrow className="mb-6">Tools</Eyebrow>
+                <h1 className="font-display text-5xl md:text-7xl text-[var(--fg)] leading-[0.98] mb-6 max-w-3xl">
+                    Three small utilities I use a lot.
+                </h1>
+                <p className="text-lg text-[var(--fg-muted)] max-w-2xl leading-relaxed">
+                    The ones I rewrite from scratch every job because nobody on the
+                    team can find the original. Length splitter, row repeater,
+                    great-circle distance.
+                </p>
+            </div>
 
-                <div className="space-y-8">
-                    {/* Excel Row Splitter Tool */}
-                    <LengthSplitterTool />
-
-                    {/* Row Repeater Tool */}
-                    <RowRepeaterTool />
-
-                    {/* Coordinate Calculator */}
-                    <CoordinateCalculatorTool />
-                </div>
-            </Section>
+            <div className="max-w-6xl mx-auto space-y-24">
+                <LengthSplitterTool />
+                <div className="divider" />
+                <RowRepeaterTool />
+                <div className="divider" />
+                <CoordinateCalculatorTool />
+            </div>
         </div>
     );
 }
 
-// Length Splitter Tool
+// ─── Length splitter ─────────────────────────────────────────────────────────
+
 function LengthSplitterTool() {
     const [totalLength, setTotalLength] = useState<number>(100);
     const [segmentLength, setSegmentLength] = useState<number>(20);
     const [result, setResult] = useState<number[]>([]);
     const [copied, setCopied] = useState(false);
 
-    const handleCalculate = () => {
-        const segments = splitLength(totalLength, segmentLength);
-        setResult(segments);
-    };
-
+    const handleCalculate = () => setResult(splitLength(totalLength, segmentLength));
     const handleCopy = () => {
         navigator.clipboard.writeText(result.join('\n'));
         setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
+        setTimeout(() => setCopied(false), 1800);
     };
 
     return (
-        <Card>
-            <div className="flex items-center gap-3 mb-6">
-                <Calculator className="w-6 h-6 text-primary" />
-                <h3 className="text-2xl font-semibold text-foreground">
-                    Excel Row Splitter
-                </h3>
+        <section className="grid md:grid-cols-12 gap-12">
+            <div className="md:col-span-4">
+                <p className="font-mono text-xs uppercase tracking-wider text-[var(--fg-dim)] mb-3">
+                    01 / 03
+                </p>
+                <h2 className="font-display text-3xl md:text-4xl text-[var(--fg)] leading-tight mb-3">
+                    Length splitter.
+                </h2>
+                <p className="text-[var(--fg-muted)] leading-relaxed">
+                    Cut a total length into equal segments. The last one keeps the
+                    remainder. Useful for splitting survey runs into Excel rows.
+                </p>
             </div>
 
-            <p className="text-foreground/70 mb-6">
-                Split a total length into equal segments. Useful for pavement survey data
-                processing.
-            </p>
-
-            <div className="grid md:grid-cols-2 gap-6 mb-6">
-                <div>
-                    <label className="block text-sm font-medium text-foreground mb-2">
-                        Total Length (m)
-                    </label>
-                    <input
+            <div className="md:col-span-8 space-y-8">
+                <div className="grid sm:grid-cols-2 gap-8">
+                    <Field
+                        label="Total length"
+                        suffix="m"
                         type="number"
                         value={totalLength}
-                        onChange={(e) => setTotalLength(Number(e.target.value))}
-                        className="w-full px-4 py-2 bg-background border border-primary/20 rounded-lg text-foreground focus:outline-none focus:border-primary"
-                        placeholder="Enter total length"
+                        onChange={(v) => setTotalLength(Number(v))}
                     />
-                </div>
-
-                <div>
-                    <label className="block text-sm font-medium text-foreground mb-2">
-                        Segment Length (m)
-                    </label>
-                    <input
+                    <Field
+                        label="Segment length"
+                        suffix="m"
                         type="number"
                         value={segmentLength}
-                        onChange={(e) => setSegmentLength(Number(e.target.value))}
-                        className="w-full px-4 py-2 bg-background border border-primary/20 rounded-lg text-foreground focus:outline-none focus:border-primary"
-                        placeholder="Enter segment length"
+                        onChange={(v) => setSegmentLength(Number(v))}
                     />
                 </div>
-            </div>
 
-            <Button onClick={handleCalculate} variant="primary">
-                Calculate Segments
-            </Button>
+                <Button onClick={handleCalculate} variant="primary">
+                    Calculate
+                    <ArrowRight className="w-4 h-4" />
+                </Button>
 
-            {result.length > 0 && (
-                <div className="mt-6">
-                    <div className="flex items-center justify-between mb-2">
-                        <h4 className="text-sm font-medium text-foreground">
-                            Result ({result.length} segments):
-                        </h4>
-                        <button
-                            onClick={handleCopy}
-                            className="flex items-center gap-2 text-sm text-primary hover:text-accent transition-colors"
-                        >
-                            {copied ? (
-                                <>
-                                    <Check className="w-4 h-4" />
-                                    Copied!
-                                </>
-                            ) : (
-                                <>
-                                    <Copy className="w-4 h-4" />
-                                    Copy
-                                </>
-                            )}
-                        </button>
-                    </div>
-                    <div className="bg-background border border-primary/20 rounded-lg p-4 max-h-64 overflow-y-auto">
-                        {result.map((segment, index) => (
+                {result.length > 0 && (
+                    <ResultBlock
+                        label={`${result.length} segments`}
+                        onCopy={handleCopy}
+                        copied={copied}
+                    >
+                        {result.map((s, i) => (
                             <div
-                                key={index}
-                                className="py-1 text-foreground font-mono text-sm"
+                                key={i}
+                                className="flex items-baseline justify-between py-1.5 border-b border-[var(--hairline)] last:border-0"
                             >
-                                {segment}
+                                <span className="font-mono text-xs text-[var(--fg-dim)] tabular-nums w-8">
+                                    {String(i + 1).padStart(2, '0')}
+                                </span>
+                                <span className="font-mono text-sm text-[var(--fg)] tabular-nums">
+                                    {s} m
+                                </span>
                             </div>
                         ))}
-                    </div>
-                </div>
-            )}
-        </Card>
+                    </ResultBlock>
+                )}
+            </div>
+        </section>
     );
 }
 
-// Row Repeater Tool
+// ─── Row repeater ────────────────────────────────────────────────────────────
+
 function RowRepeaterTool() {
     const [inputData, setInputData] = useState<string>('Row 1\nRow 2\nRow 3');
     const [repeatCount, setRepeatCount] = useState<number>(2);
@@ -139,102 +122,85 @@ function RowRepeaterTool() {
     const [copied, setCopied] = useState(false);
 
     const handleProcess = () => {
-        const rows = inputData.split('\n').filter((row) => row.trim());
-        const repeated = repeatRows(rows, repeatCount);
-        setResult(repeated);
+        const rows = inputData.split('\n').filter((r) => r.trim());
+        setResult(repeatRows(rows, repeatCount));
     };
-
     const handleCopy = () => {
         navigator.clipboard.writeText(result.join('\n'));
         setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
+        setTimeout(() => setCopied(false), 1800);
     };
 
     return (
-        <Card>
-            <div className="flex items-center gap-3 mb-6">
-                <FileSpreadsheet className="w-6 h-6 text-accent" />
-                <h3 className="text-2xl font-semibold text-foreground">
-                    Row Repeater
-                </h3>
+        <section className="grid md:grid-cols-12 gap-12">
+            <div className="md:col-span-4">
+                <p className="font-mono text-xs uppercase tracking-wider text-[var(--fg-dim)] mb-3">
+                    02 / 03
+                </p>
+                <h2 className="font-display text-3xl md:text-4xl text-[var(--fg)] leading-tight mb-3">
+                    Row repeater.
+                </h2>
+                <p className="text-[var(--fg-muted)] leading-relaxed">
+                    Take a list, repeat each row N times. Helpful for expanding
+                    chainage labels and aligning sparse data to dense grids.
+                </p>
             </div>
 
-            <p className="text-foreground/70 mb-6">
-                Repeat each row in your data a specified number of times.
-            </p>
-
-            <div className="grid md:grid-cols-2 gap-6 mb-6">
-                <div>
-                    <label className="block text-sm font-medium text-foreground mb-2">
-                        Input Data (one per line)
-                    </label>
-                    <textarea
-                        value={inputData}
-                        onChange={(e) => setInputData(e.target.value)}
-                        className="w-full h-32 px-4 py-2 bg-background border border-primary/20 rounded-lg text-foreground focus:outline-none focus:border-primary font-mono text-sm"
-                        placeholder="Enter rows..."
-                    />
-                </div>
-
-                <div>
-                    <label className="block text-sm font-medium text-foreground mb-2">
-                        Repeat Count
-                    </label>
-                    <input
+            <div className="md:col-span-8 space-y-8">
+                <div className="grid sm:grid-cols-2 gap-8">
+                    <div className="space-y-2">
+                        <label className="text-xs uppercase tracking-wider text-[var(--fg-muted)]">
+                            Rows (one per line)
+                        </label>
+                        <textarea
+                            value={inputData}
+                            onChange={(e) => setInputData(e.target.value)}
+                            rows={5}
+                            className={`${inputCls} resize-none font-mono text-sm`}
+                        />
+                    </div>
+                    <Field
+                        label="Repeat each row"
+                        suffix="×"
                         type="number"
                         value={repeatCount}
-                        onChange={(e) => setRepeatCount(Number(e.target.value))}
-                        className="w-full px-4 py-2 bg-background border border-primary/20 rounded-lg text-foreground focus:outline-none focus:border-primary"
-                        placeholder="Enter repeat count"
-                        min="1"
+                        onChange={(v) => setRepeatCount(Math.max(1, Number(v)))}
                     />
                 </div>
-            </div>
 
-            <Button onClick={handleProcess} variant="primary">
-                Generate Repeated Rows
-            </Button>
+                <Button onClick={handleProcess} variant="primary">
+                    Generate
+                    <ArrowRight className="w-4 h-4" />
+                </Button>
 
-            {result.length > 0 && (
-                <div className="mt-6">
-                    <div className="flex items-center justify-between mb-2">
-                        <h4 className="text-sm font-medium text-foreground">
-                            Result ({result.length} rows):
-                        </h4>
-                        <button
-                            onClick={handleCopy}
-                            className="flex items-center gap-2 text-sm text-primary hover:text-accent transition-colors"
-                        >
-                            {copied ? (
-                                <>
-                                    <Check className="w-4 h-4" />
-                                    Copied!
-                                </>
-                            ) : (
-                                <>
-                                    <Copy className="w-4 h-4" />
-                                    Copy
-                                </>
-                            )}
-                        </button>
-                    </div>
-                    <div className="bg-background border border-primary/20 rounded-lg p-4 max-h-64 overflow-y-auto">
-                        {result.map((row, index) => (
+                {result.length > 0 && (
+                    <ResultBlock
+                        label={`${result.length} rows`}
+                        onCopy={handleCopy}
+                        copied={copied}
+                    >
+                        {result.map((row, i) => (
                             <div
-                                key={index}
-                                className="py-1 text-foreground font-mono text-sm"
+                                key={i}
+                                className="flex items-baseline gap-4 py-1.5 border-b border-[var(--hairline)] last:border-0"
                             >
-                                {row}
+                                <span className="font-mono text-xs text-[var(--fg-dim)] tabular-nums w-8">
+                                    {String(i + 1).padStart(2, '0')}
+                                </span>
+                                <span className="font-mono text-sm text-[var(--fg)]">
+                                    {row}
+                                </span>
                             </div>
                         ))}
-                    </div>
-                </div>
-            )}
-        </Card>
+                    </ResultBlock>
+                )}
+            </div>
+        </section>
     );
 }
 
-// Coordinate Calculator Tool
+// ─── Coordinate calculator ───────────────────────────────────────────────────
+
 function CoordinateCalculatorTool() {
     const [lat1, setLat1] = useState<number>(30.0444);
     const [lon1, setLon1] = useState<number>(31.2357);
@@ -242,110 +208,177 @@ function CoordinateCalculatorTool() {
     const [lon2, setLon2] = useState<number>(31.2457);
     const [distance, setDistance] = useState<number | null>(null);
 
-    const calculateDistance = () => {
-        // Haversine formula for distance calculation
-        const R = 6371000; // Earth's radius in meters
+    const calculate = () => {
+        const R = 6371000;
         const φ1 = (lat1 * Math.PI) / 180;
         const φ2 = (lat2 * Math.PI) / 180;
         const Δφ = ((lat2 - lat1) * Math.PI) / 180;
         const Δλ = ((lon2 - lon1) * Math.PI) / 180;
-
         const a =
             Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
             Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
         const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-        const d = R * c;
-        setDistance(d);
+        setDistance(R * c);
     };
 
     return (
-        <Card>
-            <div className="flex items-center gap-3 mb-6">
-                <MapPin className="w-6 h-6 text-primary" />
-                <h3 className="text-2xl font-semibold text-foreground">
-                    Coordinate Distance Calculator
-                </h3>
+        <section className="grid md:grid-cols-12 gap-12">
+            <div className="md:col-span-4">
+                <p className="font-mono text-xs uppercase tracking-wider text-[var(--fg-dim)] mb-3">
+                    03 / 03
+                </p>
+                <h2 className="font-display text-3xl md:text-4xl text-[var(--fg)] leading-tight mb-3">
+                    Great-circle distance.
+                </h2>
+                <p className="text-[var(--fg-muted)] leading-relaxed">
+                    Two lat/long pairs, one Haversine. Returns metres along the
+                    sphere. Default values are points in Cairo.
+                </p>
             </div>
 
-            <p className="text-foreground/70 mb-6">
-                Calculate the distance between two GPS coordinates using the Haversine
-                formula.
-            </p>
-
-            <div className="grid md:grid-cols-2 gap-6 mb-6">
-                <div className="space-y-4">
-                    <h4 className="font-medium text-foreground">Point 1</h4>
-                    <div>
-                        <label className="block text-sm text-foreground/70 mb-2">
-                            Latitude
-                        </label>
-                        <input
+            <div className="md:col-span-8 space-y-8">
+                <div className="grid sm:grid-cols-2 gap-8">
+                    <div className="space-y-6">
+                        <p className="text-xs uppercase tracking-wider text-[var(--fg-muted)]">
+                            Point 1
+                        </p>
+                        <Field
+                            label="Latitude"
                             type="number"
                             step="0.000001"
                             value={lat1}
-                            onChange={(e) => setLat1(Number(e.target.value))}
-                            className="w-full px-4 py-2 bg-background border border-primary/20 rounded-lg text-foreground focus:outline-none focus:border-primary"
+                            onChange={(v) => setLat1(Number(v))}
                         />
-                    </div>
-                    <div>
-                        <label className="block text-sm text-foreground/70 mb-2">
-                            Longitude
-                        </label>
-                        <input
+                        <Field
+                            label="Longitude"
                             type="number"
                             step="0.000001"
                             value={lon1}
-                            onChange={(e) => setLon1(Number(e.target.value))}
-                            className="w-full px-4 py-2 bg-background border border-primary/20 rounded-lg text-foreground focus:outline-none focus:border-primary"
+                            onChange={(v) => setLon1(Number(v))}
                         />
                     </div>
-                </div>
-
-                <div className="space-y-4">
-                    <h4 className="font-medium text-foreground">Point 2</h4>
-                    <div>
-                        <label className="block text-sm text-foreground/70 mb-2">
-                            Latitude
-                        </label>
-                        <input
+                    <div className="space-y-6">
+                        <p className="text-xs uppercase tracking-wider text-[var(--fg-muted)]">
+                            Point 2
+                        </p>
+                        <Field
+                            label="Latitude"
                             type="number"
                             step="0.000001"
                             value={lat2}
-                            onChange={(e) => setLat2(Number(e.target.value))}
-                            className="w-full px-4 py-2 bg-background border border-primary/20 rounded-lg text-foreground focus:outline-none focus:border-primary"
+                            onChange={(v) => setLat2(Number(v))}
                         />
-                    </div>
-                    <div>
-                        <label className="block text-sm text-foreground/70 mb-2">
-                            Longitude
-                        </label>
-                        <input
+                        <Field
+                            label="Longitude"
                             type="number"
                             step="0.000001"
                             value={lon2}
-                            onChange={(e) => setLon2(Number(e.target.value))}
-                            className="w-full px-4 py-2 bg-background border border-primary/20 rounded-lg text-foreground focus:outline-none focus:border-primary"
+                            onChange={(v) => setLon2(Number(v))}
                         />
                     </div>
                 </div>
+
+                <Button onClick={calculate} variant="primary">
+                    Calculate
+                    <ArrowRight className="w-4 h-4" />
+                </Button>
+
+                {distance !== null && (
+                    <div className="border-t border-[var(--hairline)] pt-6">
+                        <p className="text-xs uppercase tracking-wider text-[var(--fg-muted)] mb-3">
+                            Distance
+                        </p>
+                        <div className="flex items-baseline gap-4 flex-wrap">
+                            <span className="font-display text-5xl md:text-6xl text-[var(--accent)] leading-none tabular-nums">
+                                {distance.toFixed(2)}
+                            </span>
+                            <span className="font-mono text-sm text-[var(--fg-dim)]">m</span>
+                            <span className="font-mono text-sm text-[var(--fg-muted)]">
+                                · {(distance / 1000).toFixed(3)} km
+                            </span>
+                        </div>
+                    </div>
+                )}
             </div>
+        </section>
+    );
+}
 
-            <Button onClick={calculateDistance} variant="primary">
-                Calculate Distance
-            </Button>
+// ─── Shared primitives ───────────────────────────────────────────────────────
 
-            {distance !== null && (
-                <div className="mt-6 p-4 bg-linear-to-r from-primary/10 to-accent/10 rounded-lg">
-                    <p className="text-foreground">
-                        <span className="font-semibold">Distance:</span>{' '}
-                        <span className="text-2xl font-bold text-primary">
-                            {distance.toFixed(2)} m
-                        </span>
-                        {' '}({(distance / 1000).toFixed(3)} km)
-                    </p>
-                </div>
-            )}
-        </Card>
+function Field({
+    label,
+    value,
+    onChange,
+    type = 'text',
+    suffix,
+    step,
+}: {
+    label: string;
+    value: string | number;
+    onChange: (v: string) => void;
+    type?: string;
+    suffix?: string;
+    step?: string;
+}) {
+    return (
+        <div className="space-y-2">
+            <label className="text-xs uppercase tracking-wider text-[var(--fg-muted)]">
+                {label}
+            </label>
+            <div className="flex items-baseline gap-2">
+                <input
+                    type={type}
+                    step={step}
+                    value={value}
+                    onChange={(e) => onChange(e.target.value)}
+                    className={inputCls}
+                />
+                {suffix && (
+                    <span className="font-mono text-xs text-[var(--fg-dim)]">{suffix}</span>
+                )}
+            </div>
+        </div>
+    );
+}
+
+function ResultBlock({
+    label,
+    onCopy,
+    copied,
+    children,
+}: {
+    label: string;
+    onCopy: () => void;
+    copied: boolean;
+    children: React.ReactNode;
+}) {
+    return (
+        <div className="border-t border-[var(--hairline)] pt-6">
+            <div className="flex items-baseline justify-between mb-4">
+                <p className="text-xs uppercase tracking-wider text-[var(--fg-muted)]">
+                    Result · {label}
+                </p>
+                <button
+                    onClick={onCopy}
+                    className="flex items-center gap-1.5 text-xs uppercase tracking-wider text-[var(--fg-muted)] hover:text-[var(--accent)] transition-colors"
+                >
+                    {copied ? (
+                        <>
+                            <Check className="w-3.5 h-3.5" />
+                            copied
+                        </>
+                    ) : (
+                        <>
+                            <Copy className="w-3.5 h-3.5" />
+                            copy
+                        </>
+                    )}
+                </button>
+            </div>
+            <div className="border border-[var(--hairline)] rounded-md bg-[var(--bg-card)] p-4 max-h-72 overflow-y-auto">
+                {children}
+            </div>
+        </div>
     );
 }

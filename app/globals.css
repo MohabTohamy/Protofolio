@@ -1,88 +1,175 @@
 @import "tailwindcss";
 
 :root {
-  --background: #000000;
-  --foreground: #FFFFFF;
-  --primary: #FFFFFF;
-  --accent: #888888;
-  --card: #1A1A1A;
-  --card-hover: #2A2A2A;
-  --secondary: #666666;
+  --bg: #0E0D0B;
+  --bg-elevated: #15140F;
+  --bg-card: #1A1812;
+  --fg: #F5F1EA;
+  --fg-muted: #A39D8F;
+  --fg-dim: #6B6759;
+  --accent: #E8704F;
+  --accent-dim: #C25A3D;
+  --hairline: rgba(245, 241, 234, 0.08);
+  --hairline-strong: rgba(245, 241, 234, 0.16);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-primary: var(--primary);
+  --color-bg: var(--bg);
+  --color-bg-elevated: var(--bg-elevated);
+  --color-bg-card: var(--bg-card);
+  --color-fg: var(--fg);
+  --color-fg-muted: var(--fg-muted);
+  --color-fg-dim: var(--fg-dim);
   --color-accent: var(--accent);
-  --color-card: var(--card);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-accent-dim: var(--accent-dim);
+
+  /* Backwards-compat aliases so legacy pages (tools/dashboard/three-lab/map) keep working */
+  --color-background: var(--bg);
+  --color-foreground: var(--fg);
+  --color-primary: var(--fg);
+  --color-secondary: var(--fg-muted);
+  --color-card: var(--bg-card);
+
+  --font-sans: var(--font-inter);
+  --font-display: var(--font-instrument-serif);
+  --font-mono: var(--font-jetbrains-mono);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-feature-settings: "ss01", "cv11";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 10px;
-}
-
-::-webkit-scrollbar-track {
-  background: #1A1A1A;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #888888;
-  border-radius: 5px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #AAAAAA;
-}
-
-/* Smooth scrolling */
 html {
   scroll-behavior: smooth;
 }
 
-/* Glassmorphism utility */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--bg-card);
+  border-radius: 5px;
+  border: 2px solid var(--bg);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--fg-dim);
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--bg);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+.font-display {
+  font-family: var(--font-instrument-serif), Georgia, "Times New Roman", serif;
+  font-weight: 400;
+  letter-spacing: -0.015em;
+}
+
+.font-mono {
+  font-family: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+}
+
+.card-editorial {
+  background: var(--bg-card);
+  border: 1px solid var(--hairline);
+  border-radius: 12px;
+  transition: border-color 220ms ease, transform 220ms ease;
+}
+.card-editorial:hover {
+  border-color: var(--hairline-strong);
+}
+
+/* Glass kept for legacy 3D pages */
 .glass {
-  background: rgba(26, 26, 26, 0.8);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(26, 24, 18, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--hairline);
 }
-
 .glass:hover {
-  background: rgba(26, 26, 26, 0.85);
+  background: rgba(26, 24, 18, 0.78);
 }
 
-/* Map popup custom styles */
+/* Map popup */
 .maplibregl-popup-content {
-  background: rgba(0, 0, 0, 0.95) !important;
-  color: white !important;
+  background: var(--bg-elevated) !important;
+  color: var(--fg) !important;
+  border: 1px solid var(--hairline) !important;
   border-radius: 8px !important;
   padding: 0 !important;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important;
 }
-
 .maplibregl-popup-close-button {
-  color: white !important;
-  font-size: 20px !important;
+  color: var(--fg) !important;
+  font-size: 18px !important;
   padding: 4px 8px !important;
   right: 4px !important;
   top: 4px !important;
 }
-
 .maplibregl-popup-close-button:hover {
-  background-color: rgba(255, 255, 255, 0.1) !important;
+  background-color: rgba(255, 255, 255, 0.06) !important;
   border-radius: 4px !important;
 }
-
 .maplibregl-popup-tip {
-  border-top-color: rgba(0, 0, 0, 0.95) !important;
-  border-bottom-color: rgba(0, 0, 0, 0.95) !important;
+  border-top-color: var(--bg-elevated) !important;
+  border-bottom-color: var(--bg-elevated) !important;
+}
+
+/* Subtle film grain — gives the warm-black depth */
+.grain::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.04;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+
+.divider {
+  height: 1px;
+  background: var(--hairline);
+  width: 100%;
+}
+
+.link-arrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  color: var(--fg);
+  transition: color 200ms ease;
+}
+.link-arrow:hover {
+  color: var(--accent);
+}
+.link-arrow svg {
+  transition: transform 200ms ease;
+}
+.link-arrow:hover svg {
+  transform: translate(2px, -2px);
+}
+
+.eyebrow {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--fg-muted);
 }

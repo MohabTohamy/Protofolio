@@ -6,89 +6,91 @@ import { Menu, X } from 'lucide-react';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const navigation = [
-    { name: 'Home', href: '/' },
-    { name: 'Projects', href: '/projects' },
-    { name: 'Tools', href: '/tools' },
-    { name: 'Map Demo', href: '/map-demo' },
-    { name: 'Dashboard', href: '/dashboard' },
-    { name: '3D Lab', href: '/three-lab' },
-    { name: 'About', href: '/about' },
-    { name: 'Contact', href: '/contact' },
+const nav = [
+    { label: 'work', href: '/projects' },
+    { label: 'tools', href: '/tools' },
+    { label: 'map', href: '/map-demo' },
+    { label: 'dashboard', href: '/dashboard' },
+    { label: '3d lab', href: '/three-lab' },
+    { label: 'about', href: '/about' },
+    { label: 'say hi', href: '/contact' },
 ];
 
 export default function Navigation() {
     const pathname = usePathname();
-    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const [open, setOpen] = useState(false);
 
     return (
-        <nav className="fixed top-0 w-full z-50 glass border-b border-primary/20">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <nav className="fixed top-0 inset-x-0 z-50 border-b border-[var(--hairline)] bg-[var(--bg)]/80 backdrop-blur-md">
+            <div className="max-w-6xl mx-auto px-6">
                 <div className="flex items-center justify-between h-16">
-                    {/* Logo */}
-                    <Link href="/" className="flex items-center space-x-2">
-                        <div className="w-10 h-10 bg-linear-to-br from-primary to-accent rounded-lg flex items-center justify-center">
-                            <span className="text-white font-bold text-xl">MT</span>
-                        </div>
-                        <span className="text-xl font-bold text-foreground">Mohab Tohamy</span>
+                    <Link href="/" className="font-display text-xl text-[var(--fg)] hover:text-[var(--accent)] transition-colors">
+                        Mohab Tohamy
                     </Link>
 
-                    {/* Desktop Navigation */}
-                    <div className="hidden md:flex items-center space-x-1">
-                        {navigation.map((item) => {
-                            const isActive = pathname === item.href;
+                    {/* Desktop */}
+                    <div className="hidden md:flex items-center text-sm">
+                        {nav.map((item, i) => {
+                            const active = pathname === item.href;
                             return (
-                                <Link
-                                    key={item.name}
-                                    href={item.href}
-                                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${isActive
-                                        ? 'bg-white text-black border border-white'
-                                        : 'text-white hover:bg-white/10 hover:text-white border border-transparent hover:border-white/30'
-                                        }`}
-                                >
-                                    {item.name}
-                                </Link>
+                                <span key={item.href} className="flex items-center">
+                                    {i > 0 && (
+                                        <span className="text-[var(--fg-dim)] mx-2 select-none">·</span>
+                                    )}
+                                    <Link
+                                        href={item.href}
+                                        className={`relative px-1 py-1 transition-colors ${active
+                                            ? 'text-[var(--accent)]'
+                                            : 'text-[var(--fg-muted)] hover:text-[var(--fg)]'
+                                            }`}
+                                    >
+                                        {item.label}
+                                        {active && (
+                                            <motion.span
+                                                layoutId="nav-active"
+                                                className="absolute -bottom-1 left-0 right-0 h-px bg-[var(--accent)]"
+                                                transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                                            />
+                                        )}
+                                    </Link>
+                                </span>
                             );
                         })}
                     </div>
 
-                    {/* Mobile menu button */}
                     <button
-                        className="md:hidden p-2 rounded-lg hover:bg-card"
-                        onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                        className="md:hidden p-2 -mr-2 text-[var(--fg)]"
+                        onClick={() => setOpen(!open)}
+                        aria-label="Toggle menu"
                     >
-                        {mobileMenuOpen ? (
-                            <X className="w-6 h-6 text-foreground" />
-                        ) : (
-                            <Menu className="w-6 h-6 text-foreground" />
-                        )}
+                        {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
                     </button>
                 </div>
             </div>
 
-            {/* Mobile Navigation */}
             <AnimatePresence>
-                {mobileMenuOpen && (
+                {open && (
                     <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="md:hidden glass border-t border-primary/20"
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="md:hidden border-t border-[var(--hairline)] overflow-hidden bg-[var(--bg)]/95 backdrop-blur-md"
                     >
-                        <div className="px-4 py-4 space-y-2">
-                            {navigation.map((item) => {
-                                const isActive = pathname === item.href;
+                        <div className="px-6 py-4 flex flex-col">
+                            {nav.map((item) => {
+                                const active = pathname === item.href;
                                 return (
                                     <Link
-                                        key={item.name}
+                                        key={item.href}
                                         href={item.href}
-                                        className={`block px-4 py-2 rounded-lg text-sm font-medium transition-all ${isActive
-                                            ? 'bg-white text-black border border-white'
-                                            : 'text-white hover:bg-white/10 hover:text-white border border-transparent hover:border-white/30'
+                                        onClick={() => setOpen(false)}
+                                        className={`py-3 text-base border-b border-[var(--hairline)] last:border-b-0 ${active
+                                            ? 'text-[var(--accent)]'
+                                            : 'text-[var(--fg-muted)] hover:text-[var(--fg)]'
                                             }`}
-                                        onClick={() => setMobileMenuOpen(false)}
                                     >
-                                        {item.name}
+                                        {item.label}
                                     </Link>
                                 );
                             })}
