@@ -189,7 +189,7 @@ export default function BallpitPage() {
 
                 {/* ── Controls drawer ── */}
                 <div
-                    className={`fixed top-0 right-0 h-full w-full sm:w-96 bg-[var(--bg-elevated)]/98 backdrop-blur-xl border-l border-[var(--hairline)] z-50 flex flex-col transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+                    className={`fixed top-16 right-0 h-[calc(100vh-4rem)] w-full sm:w-96 bg-[var(--bg-elevated)]/98 backdrop-blur-xl border-l border-[var(--hairline)] z-50 flex flex-col transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
                         showControls ? 'translate-x-0' : 'translate-x-full'
                     }`}
                 >
@@ -211,7 +211,7 @@ export default function BallpitPage() {
                                 className="text-[var(--fg-muted)] hover:text-[var(--fg)] transition-colors"
                                 aria-label="Close"
                             >
-                                <X className="w-4.5 h-4.5" />
+                                <X className="w-5 h-5" />
                             </button>
                         </div>
                     </div>
@@ -363,7 +363,7 @@ export default function BallpitPage() {
                     <button
                         aria-label="Close controls"
                         onClick={() => setShowControls(false)}
-                        className="fixed inset-0 z-40 bg-black/50 sm:hidden"
+                        className="fixed top-16 inset-x-0 bottom-0 z-40 bg-black/50 sm:hidden"
                     />
                 )}
             </div>
