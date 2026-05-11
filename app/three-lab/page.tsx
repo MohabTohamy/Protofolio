@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState, useMemo, useEffect } from 'react';
+import { useRef, useState, useMemo, useEffect, memo } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Instances, Instance } from '@react-three/drei';
 import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing';
@@ -65,8 +65,10 @@ const PROJECTS = [
 type Project = (typeof PROJECTS)[number];
 
 // ─── Star field (the original sphere-based ring, warm palette) ───────────────
+// memo: StarField takes no props — it must never re-render when parent state
+// changes (fps ticks every 500 ms → would reconcile 3125 Instance children).
 
-function StarField() {
+const StarField = memo(function StarField() {
     const innerRef = useRef<THREE.Group>(null);
     const outerRef = useRef<THREE.Group>(null);
 
@@ -101,7 +103,7 @@ function StarField() {
             </group>
         </>
     );
-}
+});
 
 // ─── Project node ────────────────────────────────────────────────────────────
 
@@ -222,15 +224,17 @@ function ProjectNode({
     );
 }
 
-// FPS bridge
-function FpsBridge({ onFps }: { onFps: (n: number) => void }) {
+// FPS bridge — reads fps inside the R3F loop and writes directly to a DOM
+// span via a ref to avoid triggering any React re-renders at all.
+function FpsBridge({ spanRef }: { spanRef: React.RefObject<HTMLSpanElement | null> }) {
     const frames = useRef(0);
     const last = useRef(performance.now());
     useFrame(() => {
         frames.current++;
         const now = performance.now();
         if (now - last.current >= 500) {
-            onFps(Math.round((frames.current * 1000) / (now - last.current)));
+            const fps = Math.round((frames.current * 1000) / (now - last.current));
+            if (spanRef.current) spanRef.current.textContent = String(fps);
             frames.current = 0;
             last.current = now;
         }
@@ -243,7 +247,7 @@ function FpsBridge({ onFps }: { onFps: (n: number) => void }) {
 export default function ThreeLabPage() {
     const router = useRouter();
     const [hoveredId, setHoveredId] = useState<string | null>(null);
-    const [fps, setFps] = useState(60);
+    const fpsSpanRef = useRef<HTMLSpanElement>(null);
     const autoHideRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const hovered = useMemo(
@@ -330,7 +334,7 @@ export default function ThreeLabPage() {
                     />
                 ))}
 
-                <FpsBridge onFps={setFps} />
+                <FpsBridge spanRef={fpsSpanRef} />
 
                 <OrbitControls
                     autoRotate={!hoveredId}
@@ -496,7 +500,9 @@ export default function ThreeLabPage() {
                     </div>
                     <div className="flex items-baseline justify-end gap-3">
                         <dt className="uppercase tracking-[0.18em] text-[var(--fg)]/40">fps</dt>
-                        <dd className="tabular-nums text-[var(--accent)] w-16">{fps}</dd>
+                        <dd className="tabular-nums text-[var(--accent)] w-16">
+                                <span ref={fpsSpanRef}>60</span>
+                            </dd>
                     </div>
                 </dl>
             </div>
