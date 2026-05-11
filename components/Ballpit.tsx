@@ -343,19 +343,29 @@ class W {
 
     update(deltaInfo: { delta: number }) {
         const { config, center, positionData, sizeData, velocityData } = this;
-        let startIdx = 0;
+        // sphere0 is reserved as the cursor sphere. It is NEVER part of the
+        // gravity/friction loop — that's why startIdx is always 1.
+        // Whether it actually pushes balls (collision) depends on controlSphere0,
+        // which is set by pointer events (true = cursor is over canvas).
+        // Whether it's *visible* depends on followCursor — handled in Z.update.
+        const startIdx = 1;
+
         if (config.controlSphere0) {
-            // Cursor is active — move sphere0 toward cursor position
-            startIdx = 1;
-            const firstVec = new Vector3().fromArray(positionData, 0);
-            firstVec.lerp(center, 0.1).toArray(positionData, 0);
-            new Vector3(0, 0, 0).toArray(velocityData, 0);
-        } else if (!config.followCursor) {
-            // followCursor toggled off — park sphere0 far outside bounds so it
-            // doesn't fall under gravity and block all the other balls
-            startIdx = 1;
-            new Vector3(9999, 9999, 9999).toArray(positionData, 0);
-            new Vector3(0, 0, 0).toArray(velocityData, 0);
+            // Cursor is over canvas — sphere0 tracks the cursor.
+            // If sphere0 was previously parked far away (very large distance to
+            // cursor), snap to cursor instantly instead of lerping for ~50 frames.
+            _tempVec.fromArray(positionData, 0);
+            if (_tempVec.distanceTo(center) > 50) {
+                center.toArray(positionData, 0);
+            } else {
+                _tempVec.lerp(center, 0.1).toArray(positionData, 0);
+            }
+            _zeroVec.toArray(velocityData, 0);
+        } else {
+            // Cursor is not over canvas — park sphere0 far below the world so
+            // it neither falls under gravity nor collides with other balls.
+            _parkedPos.toArray(positionData, 0);
+            _zeroVec.toArray(velocityData, 0);
         }
         for (let idx = startIdx; idx < config.count; idx++) {
             const base = 3 * idx;
@@ -465,6 +475,11 @@ const DefaultBallpitConfig = {
 };
 
 const U = new Object3D();
+
+// Reusable vectors to avoid per-frame allocations in W.update
+const _zeroVec   = new Vector3(0, 0, 0);
+const _parkedPos = new Vector3(0, -10000, 0); // park sphere0 far below the world
+const _tempVec   = new Vector3();
 
 let globalPointerActive = false;
 const pointerPosition = new Vector2();
@@ -717,14 +732,24 @@ class Z extends InstancedMesh {
         this.physics.update(deltaInfo);
         for (let idx = 0; idx < this.count; idx++) {
             U.position.fromArray(this.physics.positionData, 3 * idx);
-            if (idx === 0 && this.config.followCursor === false) {
+            // Hide sphere0 when the toggle is off OR the cursor isn't over the
+            // canvas. The cursor effect (pushing other balls) still runs in
+            // both cases as long as the cursor is over the canvas.
+            if (idx === 0 && (!this.config.followCursor || !this.config.controlSphere0)) {
                 U.scale.setScalar(0);
             } else {
                 U.scale.setScalar(this.physics.sizeData[idx]);
             }
             U.updateMatrix();
             this.setMatrixAt(idx, U.matrix);
-            if (idx === 0) this.light!.position.copy(U.position);
+            // Keep the main light at cursor only when active; otherwise center it.
+            if (idx === 0) {
+                if (this.config.controlSphere0) {
+                    this.light!.position.copy(U.position);
+                } else {
+                    this.light!.position.set(0, 0, 0);
+                }
+            }
         }
         this.instanceMatrix.needsUpdate = true;
     }
@@ -764,10 +789,8 @@ function createBallpit(canvas: HTMLCanvasElement, config: any = {}): CreateBallp
     const pointerData = createPointerData({
         domElement: canvas,
         onMove() {
-            if (!spheres.config.followCursor) {
-                spheres.config.controlSphere0 = false;
-                return;
-            }
+            // Cursor effect always runs — the followCursor toggle only controls
+            // whether the cursor sphere is *visible* (handled in Z.update).
             raycaster.setFromCamera(pointerData.nPosition, threeInstance.camera);
             threeInstance.camera.getWorldDirection(plane.normal);
             raycaster.ray.intersectPlane(plane, intersectionPoint);
@@ -875,11 +898,12 @@ const Ballpit: React.FC<BallpitProps> = ({
     useEffect(() => {
         const inst = spheresInstanceRef.current;
         if (!inst) return;
-        inst.spheres.config.gravity = gravity;
-        inst.spheres.config.friction = friction;
-        inst.spheres.config.wallBounce = wallBounce;
+        inst.spheres.config.gravity      = gravity;
+        inst.spheres.config.friction     = friction;
+        inst.spheres.config.wallBounce   = wallBounce;
         inst.spheres.config.followCursor = followCursor;
-        if (!followCursor) inst.spheres.config.controlSphere0 = false;
+        // Note: controlSphere0 is intentionally NOT touched here — it's driven
+        // by pointer events and reflects "is the cursor over the canvas".
     }, [gravity, friction, wallBounce, followCursor]);
 
     // ── Count rebuild ─────────────────────────────────────────────

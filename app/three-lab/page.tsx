@@ -78,10 +78,10 @@ function StarField() {
 
     return (
         <>
-            {/* Inner dense ring */}
+            {/* Inner dense ring — low-poly to keep vertex throughput cheap */}
             <group ref={innerRef}>
                 <Instances limit={pointsInner.length + 10}>
-                    <sphereGeometry args={[0.08, 8, 8]} />
+                    <sphereGeometry args={[0.08, 5, 5]} />
                     <meshBasicMaterial toneMapped={false} />
                     {pointsInner.map((p) => (
                         <Instance key={p.idx} position={p.position} color={p.color} />
@@ -92,7 +92,7 @@ function StarField() {
             {/* Outer scattered star dust */}
             <group ref={outerRef}>
                 <Instances limit={pointsOuter.length + 10}>
-                    <sphereGeometry args={[0.06, 6, 6]} />
+                    <sphereGeometry args={[0.06, 4, 4]} />
                     <meshBasicMaterial toneMapped={false} />
                     {pointsOuter.map((p) => (
                         <Instance key={p.idx} position={p.position} color={p.color} />
@@ -122,6 +122,10 @@ function ProjectNode({
     const meshRef = useRef<THREE.Mesh>(null);
     const ringRef = useRef<THREE.Mesh>(null);
     const lightRef = useRef<THREE.PointLight>(null);
+    // Scalar refs for manual lerping — avoids `new Vector3(...)` per frame
+    const meshScaleRef = useRef(1);
+    const ringScaleRef = useRef(0);
+    const matRef = useRef<THREE.MeshStandardMaterial | null>(null);
 
     // Nodes positioned on the XY plane (same as starfield disc), z=0
     const basePos = useMemo(
@@ -144,25 +148,26 @@ function ProjectNode({
         }
 
         if (meshRef.current) {
-            const targetScale = hovered ? 1.7 : 1.0;
-            meshRef.current.scale.lerp(
-                new THREE.Vector3(targetScale, targetScale, targetScale),
-                0.12
-            );
-            const mat = meshRef.current.material as THREE.MeshStandardMaterial;
+            // Scalar lerp — no Vector3 allocation
+            const target = hovered ? 1.7 : 1.0;
+            meshScaleRef.current += (target - meshScaleRef.current) * 0.12;
+            meshRef.current.scale.setScalar(meshScaleRef.current);
+
+            // Cache material reference (set once)
+            if (!matRef.current) {
+                matRef.current = meshRef.current.material as THREE.MeshStandardMaterial;
+            }
             const pulse = Math.sin(t * (hovered ? 3 : 1.5)) * 0.5 + 0.5;
-            mat.emissiveIntensity =
+            matRef.current.emissiveIntensity =
                 (hovered ? 1.2 : 0.55) + pulse * (hovered ? 0.4 : 0.15);
         }
 
         if (ringRef.current) {
             ringRef.current.rotation.x = t * 0.4;
             ringRef.current.rotation.y = t * 0.6;
-            const ringScale = hovered ? 1.0 : 0.0;
-            ringRef.current.scale.lerp(
-                new THREE.Vector3(ringScale, ringScale, ringScale),
-                0.15
-            );
+            const target = hovered ? 1.0 : 0.0;
+            ringScaleRef.current += (target - ringScaleRef.current) * 0.15;
+            ringRef.current.scale.setScalar(ringScaleRef.current);
         }
 
         if (lightRef.current) {
@@ -175,7 +180,7 @@ function ProjectNode({
         <group ref={groupRef} position={basePos.clone()}>
             {/* Halo torus — visible only on hover */}
             <mesh ref={ringRef} scale={0}>
-                <torusGeometry args={[1.0, 0.02, 8, 64]} />
+                <torusGeometry args={[1.0, 0.02, 6, 32]} />
                 <meshBasicMaterial color={project.color} transparent opacity={0.6} toneMapped={false} />
             </mesh>
 
@@ -195,7 +200,7 @@ function ProjectNode({
                     onClick();
                 }}
             >
-                <sphereGeometry args={[0.5, 48, 48]} />
+                <sphereGeometry args={[0.5, 32, 32]} />
                 <meshStandardMaterial
                     color={project.color}
                     emissive={project.color}
@@ -297,6 +302,7 @@ export default function ThreeLabPage() {
         <div className="fixed inset-0 bg-[var(--bg)] overflow-hidden">
             <Canvas
                 camera={{ position: [10, -7.5, 18], fov: 55 }}
+                dpr={[1, 1.5]}
                 gl={{
                     antialias: true,
                     alpha: false,

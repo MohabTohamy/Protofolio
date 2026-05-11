@@ -307,7 +307,7 @@ export default function FuturisticDashboardPage() {
             <div className="absolute inset-0 pt-28">
                 <Canvas
                     camera={{ position: [0, 0, 15], fov: 60 }}
-                    shadows
+                    dpr={[1, 1.5]}
                     gl={{
                         antialias: true,
                         alpha: true,

@@ -337,7 +337,7 @@ export default function ThreeLabClassicPage() {
             <div className="relative">
                 {/* Sticky canvas */}
                 <div className="sticky top-0 h-screen w-full z-0">
-                    <Canvas camera={{ position: [0, 0, 8], fov: 50 }}>
+                    <Canvas camera={{ position: [0, 0, 8], fov: 50 }} dpr={[1, 1.5]}>
                         <Suspense fallback={null}>
                             <ambientLight intensity={0.3} />
                             <spotLight position={[10, 10, 10]} angle={0.3} penumbra={1} intensity={1.2} />

@@ -301,6 +301,7 @@ export default function ParticleRingPage() {
         <div className="fixed inset-0 bg-[var(--bg)]">
             <Canvas
                 camera={{ position: [0, 6, 18], fov: 55 }}
+                dpr={[1, 1.5]}
                 gl={{
                     antialias: true,
                     alpha: false,
