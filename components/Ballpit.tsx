@@ -345,9 +345,16 @@ class W {
         const { config, center, positionData, sizeData, velocityData } = this;
         let startIdx = 0;
         if (config.controlSphere0) {
+            // Cursor is active — move sphere0 toward cursor position
             startIdx = 1;
             const firstVec = new Vector3().fromArray(positionData, 0);
             firstVec.lerp(center, 0.1).toArray(positionData, 0);
+            new Vector3(0, 0, 0).toArray(velocityData, 0);
+        } else if (!config.followCursor) {
+            // followCursor toggled off — park sphere0 far outside bounds so it
+            // doesn't fall under gravity and block all the other balls
+            startIdx = 1;
+            new Vector3(9999, 9999, 9999).toArray(positionData, 0);
             new Vector3(0, 0, 0).toArray(velocityData, 0);
         }
         for (let idx = startIdx; idx < config.count; idx++) {
@@ -757,6 +764,10 @@ function createBallpit(canvas: HTMLCanvasElement, config: any = {}): CreateBallp
     const pointerData = createPointerData({
         domElement: canvas,
         onMove() {
+            if (!spheres.config.followCursor) {
+                spheres.config.controlSphere0 = false;
+                return;
+            }
             raycaster.setFromCamera(pointerData.nPosition, threeInstance.camera);
             threeInstance.camera.getWorldDirection(plane.normal);
             raycaster.ray.intersectPlane(plane, intersectionPoint);
@@ -868,6 +879,7 @@ const Ballpit: React.FC<BallpitProps> = ({
         inst.spheres.config.friction = friction;
         inst.spheres.config.wallBounce = wallBounce;
         inst.spheres.config.followCursor = followCursor;
+        if (!followCursor) inst.spheres.config.controlSphere0 = false;
     }, [gravity, friction, wallBounce, followCursor]);
 
     // ── Count rebuild ─────────────────────────────────────────────

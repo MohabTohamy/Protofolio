@@ -239,11 +239,22 @@ export default function ThreeLabPage() {
     const router = useRouter();
     const [hoveredId, setHoveredId] = useState<string | null>(null);
     const [fps, setFps] = useState(60);
+    const autoHideRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const hovered = useMemo(
         () => PROJECTS.find((p) => p.id === hoveredId) ?? null,
         [hoveredId]
     );
+
+    // Auto-hide info card after 5 s of inactivity
+    useEffect(() => {
+        if (!hoveredId) return;
+        if (autoHideRef.current) clearTimeout(autoHideRef.current);
+        autoHideRef.current = setTimeout(() => setHoveredId(null), 5000);
+        return () => {
+            if (autoHideRef.current) clearTimeout(autoHideRef.current);
+        };
+    }, [hoveredId]);
 
     // Keyboard nav
     useEffect(() => {
@@ -396,10 +407,10 @@ export default function ThreeLabPage() {
                 {hovered && (
                     <motion.div
                         key={hovered.id}
-                        initial={{ opacity: 0, x: -16 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -16 }}
-                        transition={{ duration: 0.25, ease: 'easeOut' }}
+                        initial={{ opacity: 0, x: -24, filter: 'blur(8px)' }}
+                        animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }}
+                        exit={{ opacity: 0, x: -32, filter: 'blur(12px)', scale: 0.96 }}
+                        transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
                         className="fixed left-6 md:left-12 top-1/2 -translate-y-1/2 z-30 max-w-sm pointer-events-auto"
                     >
                         <div className="flex items-center gap-3 mb-4">
@@ -440,6 +451,17 @@ export default function ThreeLabPage() {
                             </span>
                             <ArrowUpRight className="w-4 h-4 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 transition-transform" />
                         </button>
+                        {/* 5 s auto-dismiss countdown */}
+                        <div className="mt-5 h-px overflow-hidden bg-[var(--hairline)]">
+                            <motion.div
+                                key={hovered.id + '-bar'}
+                                className="h-full"
+                                style={{ background: hovered.color }}
+                                initial={{ width: '100%' }}
+                                animate={{ width: '0%' }}
+                                transition={{ duration: 5, ease: 'linear' }}
+                            />
+                        </div>
                     </motion.div>
                 )}
             </AnimatePresence>

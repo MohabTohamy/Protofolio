@@ -256,6 +256,8 @@ function DashboardScene() {
                 enableRotate
                 autoRotate
                 autoRotateSpeed={0.4}
+                minDistance={6}
+                maxDistance={20}
             />
         </>
     );

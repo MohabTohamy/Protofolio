@@ -2,7 +2,7 @@
 
 import { useRef, useMemo, useState, useEffect } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls } from '@react-three/drei';
+import { OrbitControls, Stars } from '@react-three/drei';
 import { EffectComposer, Bloom, ChromaticAberration, Vignette } from '@react-three/postprocessing';
 import * as THREE from 'three';
 import Link from 'next/link';
@@ -24,11 +24,9 @@ const VERT = /* glsl */ `
   varying float vRing;
   varying float vGlow;
 
-  // hash for pseudo-random
   float hash(float n) { return fract(sin(n) * 43758.5453123); }
 
   void main() {
-    // Each particle orbits on a ring at radius r with phase aOffset
     float ringIdx = aRing;
     float radius = 4.0 + ringIdx * 1.4 + sin(uTime * 0.4 + aOffset * 6.28318) * 0.15;
     float angle  = uTime * (0.18 + 0.06 * ringIdx) + aOffset * 6.28318;
@@ -38,20 +36,17 @@ const VERT = /* glsl */ `
     pos.z = sin(angle) * radius;
     pos.y = sin(angle * 2.0 + aSeed.x * 6.28) * (0.35 + ringIdx * 0.25);
 
-    // Mouse-driven wave: distance from particle to mouse projected on the floor
     vec2 floorPos = vec2(pos.x, pos.z);
     float d  = length(floorPos - uMouse * 8.0);
     float w  = exp(-d * 0.35) * uPointer;
     pos.y   += w * 1.6;
     pos.xz  += normalize(floorPos - uMouse * 8.0 + 0.0001) * w * 0.6;
 
-    // breathing
     pos *= 1.0 + sin(uTime * 0.6 + aSeed.y * 6.28) * 0.015;
 
     vec4 mvPos = modelViewMatrix * vec4(pos, 1.0);
     gl_Position = projectionMatrix * mvPos;
 
-    // Size attenuation by depth
     float baseSize = mix(2.0, 5.0, hash(aOffset * 31.0));
     gl_PointSize = baseSize * uPixelRatio * (300.0 / -mvPos.z) * (0.6 + w * 1.5);
 
@@ -73,26 +68,23 @@ const FRAG = /* glsl */ `
   varying float vGlow;
 
   void main() {
-    // Soft round point sprite
     vec2 c = gl_PointCoord - 0.5;
     float r = length(c);
     if (r > 0.5) discard;
     float core  = smoothstep(0.50, 0.00, r);
     float halo  = smoothstep(0.50, 0.20, r) * 0.5;
 
-    // Color per ring
     vec3 col = mix(uColorA, uColorB, vRing * 0.5);
     col      = mix(col,    uColorC, smoothstep(0.5, 1.5, vRing));
-    col     *= 0.7 + vGlow;
+    col     *= 0.45 + vGlow * 0.5;
 
     float depthFade = clamp(1.0 - (vDepth - 6.0) / 30.0, 0.2, 1.0);
-
-    float alpha = (core + halo) * depthFade;
+    float alpha = (core * 0.55 + halo) * depthFade;
     gl_FragColor = vec4(col, alpha);
   }
 `;
 
-// ─── Particles ──────────────────────────────────────────────────────────────
+// ─── Particle ring ────────────────────────────────────────────────────────────
 
 const RINGS = 3;
 const PER_RING = 2200;
@@ -127,9 +119,9 @@ function ParticleRing() {
             uMouse: { value: new THREE.Vector2(0, 0) },
             uPointer: { value: 0 },
             uPixelRatio: { value: Math.min(window.devicePixelRatio, 2) },
-            uColorA: { value: new THREE.Color('#E8B14F') }, // amber
-            uColorB: { value: new THREE.Color('#E8704F') }, // coral
-            uColorC: { value: new THREE.Color('#7AC4D9') }, // cyan
+            uColorA: { value: new THREE.Color('#E8B14F') },
+            uColorB: { value: new THREE.Color('#E8704F') },
+            uColorC: { value: new THREE.Color('#7AC4D9') },
         }),
         []
     );
@@ -155,14 +147,10 @@ function ParticleRing() {
         if (!matRef.current) return;
         mouse.current.lerp(targetMouse.current, 0.08);
         pointerStrength.current += (targetPointer.current - pointerStrength.current) * 0.05;
-
         uniforms.uTime.value = state.clock.elapsedTime;
         uniforms.uMouse.value.copy(mouse.current);
         uniforms.uPointer.value = pointerStrength.current;
-
-        if (ptsRef.current) {
-            ptsRef.current.rotation.y += 0.0008;
-        }
+        if (ptsRef.current) ptsRef.current.rotation.y += 0.0008;
     });
 
     return (
@@ -186,7 +174,108 @@ function ParticleRing() {
     );
 }
 
-// ─── HUD ─────────────────────────────────────────────────────────────────────
+// ─── Central star ─────────────────────────────────────────────────────────────
+
+function CentralStar() {
+    const meshRef = useRef<THREE.Mesh>(null);
+    const lightRef = useRef<THREE.PointLight>(null);
+
+    useFrame(({ clock }) => {
+        const pulse = Math.sin(clock.elapsedTime * 1.8) * 0.5 + 0.5;
+        if (lightRef.current) lightRef.current.intensity = 0.6 + pulse * 0.4;
+        if (meshRef.current) {
+            const s = 0.12 + pulse * 0.04;
+            meshRef.current.scale.setScalar(s);
+        }
+    });
+
+    return (
+        <>
+            <pointLight ref={lightRef} position={[0, 0, 0]} color="#fff8e0" intensity={0.8} distance={25} decay={2} />
+            <mesh ref={meshRef} position={[0, 0, 0]}>
+                <sphereGeometry args={[1, 16, 16]} />
+                <meshBasicMaterial color="#fff8e0" toneMapped={false} />
+            </mesh>
+        </>
+    );
+}
+
+// ─── Planets ──────────────────────────────────────────────────────────────────
+
+interface PlanetProps {
+    orbitRadius: number;
+    speed: number;
+    size: number;
+    color: string;
+    tilt: number;
+    phase: number;
+    hasMoon?: boolean;
+}
+
+function Planet({ orbitRadius, speed, size, color, tilt, phase, hasMoon }: PlanetProps) {
+    const orbitRef = useRef<THREE.Group>(null);
+    const meshRef = useRef<THREE.Mesh>(null);
+    const moonOrbitRef = useRef<THREE.Group>(null);
+
+    useFrame(({ clock }) => {
+        const t = clock.elapsedTime;
+        if (orbitRef.current) orbitRef.current.rotation.y = t * speed + phase;
+        if (meshRef.current) {
+            meshRef.current.rotation.y += 0.018;
+            meshRef.current.rotation.x += 0.006;
+        }
+        if (moonOrbitRef.current) moonOrbitRef.current.rotation.y = t * speed * 3.2;
+    });
+
+    return (
+        <group rotation={[tilt, 0, 0]}>
+            {/* Orbit trail ring */}
+            <mesh rotation={[Math.PI / 2, 0, 0]}>
+                <torusGeometry args={[orbitRadius, 0.012, 4, 128]} />
+                <meshBasicMaterial color={color} transparent opacity={0.1} toneMapped={false} />
+            </mesh>
+
+            {/* Planet */}
+            <group ref={orbitRef}>
+                <mesh ref={meshRef} position={[orbitRadius, 0, 0]}>
+                    <sphereGeometry args={[size, 36, 36]} />
+                    <meshStandardMaterial
+                        color={color}
+                        emissive={color}
+                        emissiveIntensity={0.35}
+                        metalness={0.15}
+                        roughness={0.75}
+                    />
+                </mesh>
+
+                {/* Moon */}
+                {hasMoon && (
+                    <group position={[orbitRadius, 0, 0]} ref={moonOrbitRef}>
+                        <mesh position={[size * 2.5, 0, 0]}>
+                            <sphereGeometry args={[size * 0.28, 16, 16]} />
+                            <meshStandardMaterial
+                                color={color}
+                                emissive={color}
+                                emissiveIntensity={0.15}
+                                metalness={0.1}
+                                roughness={0.9}
+                            />
+                        </mesh>
+                    </group>
+                )}
+            </group>
+        </group>
+    );
+}
+
+const PLANET_DATA: PlanetProps[] = [
+    { orbitRadius: 9.5,  speed: 0.28, size: 0.32, color: '#E8704F', tilt:  0.28, phase: 0,    hasMoon: false },
+    { orbitRadius: 12.0, speed: 0.16, size: 0.55, color: '#7AC4D9', tilt: -0.42, phase: 2.09, hasMoon: true  },
+    { orbitRadius: 14.5, speed: 0.09, size: 0.44, color: '#B89BD9', tilt:  0.18, phase: 4.19, hasMoon: false },
+    { orbitRadius: 17.0, speed: 0.05, size: 0.72, color: '#E8B14F', tilt: -0.12, phase: 1.05, hasMoon: true  },
+];
+
+// ─── FPS bridge ───────────────────────────────────────────────────────────────
 
 function HudBridge({ onFps }: { onFps: (n: number) => void }) {
     const frames = useRef(0);
@@ -211,7 +300,7 @@ export default function ParticleRingPage() {
     return (
         <div className="fixed inset-0 bg-[var(--bg)]">
             <Canvas
-                camera={{ position: [0, 5, 14], fov: 55 }}
+                camera={{ position: [0, 6, 18], fov: 55 }}
                 gl={{
                     antialias: true,
                     alpha: false,
@@ -221,20 +310,33 @@ export default function ParticleRingPage() {
                     gl.setClearColor(new THREE.Color('#0E0D0B'));
                 }}
             >
-                <ambientLight intensity={0.2} />
+                <ambientLight intensity={0.15} />
+                <Stars radius={60} depth={40} count={1800} factor={3} saturation={0} fade speed={0.3} />
+
+                <CentralStar />
                 <ParticleRing />
+
+                {PLANET_DATA.map((p, i) => (
+                    <Planet key={i} {...p} />
+                ))}
+
                 <HudBridge onFps={setFps} />
+
                 <OrbitControls
-                    maxDistance={28}
+                    maxDistance={35}
                     minDistance={8}
                     enablePan={false}
                     autoRotate
-                    autoRotateSpeed={0.4}
+                    autoRotateSpeed={0.3}
                 />
                 <EffectComposer multisampling={0}>
-                    <Bloom intensity={0.9} luminanceThreshold={0.05} luminanceSmoothing={0.4} mipmapBlur />
-                    <ChromaticAberration offset={new THREE.Vector2(0.0008, 0.0012)} />
-                    <Vignette eskil={false} offset={0.15} darkness={0.65} />
+                    <Bloom
+                        intensity={0.35}
+                        luminanceThreshold={0.35}
+                        luminanceSmoothing={0.4}
+                    />
+                    <ChromaticAberration offset={new THREE.Vector2(0.0006, 0.0010)} />
+                    <Vignette eskil={false} offset={0.15} darkness={0.7} />
                 </EffectComposer>
             </Canvas>
 
@@ -256,14 +358,15 @@ export default function ParticleRingPage() {
             {/* Bottom-left: title block */}
             <div className="fixed bottom-10 left-6 md:left-12 z-40 max-w-md pointer-events-none">
                 <p className="text-xs uppercase tracking-[0.2em] text-[var(--fg)]/50 mb-3">
-                    GPU particles · custom shaders
+                    GPU particles · custom shaders · solar system
                 </p>
                 <h1 className="font-display text-4xl md:text-6xl text-[var(--fg)] leading-[0.95] mb-3">
                     Particle Ring
                 </h1>
                 <p className="text-sm text-[var(--fg-muted)] leading-relaxed max-w-sm">
-                    Three concentric rings, {COUNT.toLocaleString()} GPU points, additive blending,
-                    bloom + chromatic aberration. Move your cursor — you displace the field.
+                    Three concentric rings, {COUNT.toLocaleString()} GPU points. Four planets
+                    in orbit — each with its own inclination and speed.
+                    Move your cursor to displace the field.
                 </p>
             </div>
 
@@ -273,6 +376,10 @@ export default function ParticleRingPage() {
                     <div className="flex items-baseline justify-end gap-3">
                         <dt className="uppercase tracking-[0.18em] text-[var(--fg)]/40">particles</dt>
                         <dd className="tabular-nums text-[var(--fg)]/70 w-16">{COUNT.toLocaleString()}</dd>
+                    </div>
+                    <div className="flex items-baseline justify-end gap-3">
+                        <dt className="uppercase tracking-[0.18em] text-[var(--fg)]/40">planets</dt>
+                        <dd className="tabular-nums text-[var(--fg)]/70 w-16">{PLANET_DATA.length}</dd>
                     </div>
                     <div className="flex items-baseline justify-end gap-3">
                         <dt className="uppercase tracking-[0.18em] text-[var(--fg)]/40">draw calls</dt>

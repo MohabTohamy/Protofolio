@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem -Force)",
+      "Bash(Format-Table -AutoSize)",
+      "Bash(npx tsc *)",
+      "Bash(node -e \"const d = require\\('@react-three/drei'\\); console.log\\('Stars:', typeof d.Stars\\);\")",
+      "Bash(npm run *)"
+    ]
+  }
+}
