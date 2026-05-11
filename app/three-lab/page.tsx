@@ -399,7 +399,7 @@ export default function ThreeLabPage() {
                         transition={{ duration: 0.4, delay: 0.2 }}
                         className="fixed left-1/2 top-[28vh] -translate-x-1/2 z-30 text-center pointer-events-none px-6 max-w-xl"
                     >
-                        <p className="text-xs uppercase tracking-[0.2em] text-[var(--fg)]/40 mb-4">
+                        {/* <p className="text-xs uppercase tracking-[0.2em] text-[var(--fg)]/40 mb-4">
                             Four interactive 3D demos
                         </p>
                         <h1 className="font-display text-4xl md:text-6xl text-[var(--fg)] leading-[0.98] mb-4">
@@ -407,7 +407,7 @@ export default function ThreeLabPage() {
                         </h1>
                         <p className="text-sm text-[var(--fg)]/50">
                             Each glowing orb is a working demo. Click to enter.
-                        </p>
+                        </p> */}
                     </motion.div>
                 )}
             </AnimatePresence>
@@ -501,8 +501,8 @@ export default function ThreeLabPage() {
                     <div className="flex items-baseline justify-end gap-3">
                         <dt className="uppercase tracking-[0.18em] text-[var(--fg)]/40">fps</dt>
                         <dd className="tabular-nums text-[var(--accent)] w-16">
-                                <span ref={fpsSpanRef}>60</span>
-                            </dd>
+                            <span ref={fpsSpanRef}>60</span>
+                        </dd>
                     </div>
                 </dl>
             </div>
