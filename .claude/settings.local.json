@@ -5,7 +5,13 @@
       "Bash(Format-Table -AutoSize)",
       "Bash(npx tsc *)",
       "Bash(node -e \"const d = require\\('@react-three/drei'\\); console.log\\('Stars:', typeof d.Stars\\);\")",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "Bash(findstr -i \"resend\\\\|nodemailer\\\\|emailjs\\\\|sendgrid\")",
+      "Bash(npm install *)",
+      "Bash(node -e \"require\\('resend'\\); console.log\\('ok'\\)\")",
+      "Bash(Test-Path *)",
+      "Bash(npm uninstall *)",
+      "Bash(node -e \"console.log\\(Object.keys\\(require\\('lenis'\\)\\)\\)\")"
     ]
   }
 }

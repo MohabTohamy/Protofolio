@@ -43,9 +43,10 @@ export default function AboutPage() {
                             Practical stuff that replaces weeks of manual work.
                         </p>
                         <p className="text-[var(--fg)]">
-                            I'm moving to Austria in 2026. My closest friends grew up
+                            {/* I'm moving to Austria in 2026. My closest friends grew up
                             there and live in St. Pölten now — that's the real
-                            reason. The professional one is that the engineering
+                            reason. */}
+                            The professional one is that the engineering
                             software scene in Austria is genuinely good, and I want
                             to be part of it.
                         </p>

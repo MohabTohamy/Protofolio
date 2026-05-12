@@ -36,8 +36,8 @@ export default function HomePage() {
           >
             React, Next.js, and a lot of Python. Pavement surveys, GIS pipelines,
             desktop tools that turn weeks of spreadsheet work into one click.
-            Currently in Saudi Arabia. Moving to Austria in 2026 — my closest
-            friends are in St. Pölten and the engineering scene there is
+            Currently in Saudi Arabia. Moving to Austria in 2026 —
+            {/*my closestfriends are in St. Pölten and*/} the engineering scene there is
             genuinely good.
           </motion.p>
           <motion.div
@@ -78,23 +78,23 @@ export default function HomePage() {
               const isExternal = href.startsWith('http');
               const Wrapper = isExternal
                 ? ({ children }: { children: React.ReactNode }) => (
-                    <a
-                      href={href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="group grid grid-cols-12 gap-4 py-7 items-baseline hover:bg-[var(--bg-elevated)]/40 -mx-4 px-4 rounded-md transition-colors"
-                    >
-                      {children}
-                    </a>
-                  )
+                  <a
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group grid grid-cols-12 gap-4 py-7 items-baseline hover:bg-[var(--bg-elevated)]/40 -mx-4 px-4 rounded-md transition-colors"
+                  >
+                    {children}
+                  </a>
+                )
                 : ({ children }: { children: React.ReactNode }) => (
-                    <Link
-                      href={href}
-                      className="group grid grid-cols-12 gap-4 py-7 items-baseline hover:bg-[var(--bg-elevated)]/40 -mx-4 px-4 rounded-md transition-colors"
-                    >
-                      {children}
-                    </Link>
-                  );
+                  <Link
+                    href={href}
+                    className="group grid grid-cols-12 gap-4 py-7 items-baseline hover:bg-[var(--bg-elevated)]/40 -mx-4 px-4 rounded-md transition-colors"
+                  >
+                    {children}
+                  </Link>
+                );
 
               return (
                 <motion.li
@@ -216,13 +216,13 @@ export default function HomePage() {
       <section className="px-6 py-24">
         <div className="max-w-3xl mx-auto">
           <Eyebrow className="mb-6">Why Austria</Eyebrow>
-          <p className="font-display text-3xl md:text-4xl text-[var(--fg)] leading-tight mb-8">
+          {/* <p className="font-display text-3xl md:text-4xl text-[var(--fg)] leading-tight mb-8">
             My closest friends grew up in St. Pölten. We've been waiting years
             to live in the same place again.
-          </p>
+          </p> */}
           <div className="space-y-4 text-[var(--fg-muted)] leading-relaxed mb-8">
             <p>
-              That's the real reason. The professional reason — Austria has
+              {/*  That's the real reason. */}The professional reason — Austria has
               serious engineering software companies and a frontend scene that
               takes craft seriously, which is a good fit for what I do.
             </p>

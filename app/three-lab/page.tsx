@@ -372,9 +372,9 @@ export default function ThreeLabPage() {
             </Link>
 
             {/* Top-center: section title */}
-            <p className="fixed top-20 left-1/2 -translate-x-1/2 z-50 text-xs uppercase tracking-[0.18em] text-[var(--fg)]/50">
+            {/* <p className="fixed top-20 left-1/2 -translate-x-1/2 z-50 text-xs uppercase tracking-[0.18em] text-[var(--fg)]/50">
                 3D Lab — {PROJECTS.length} demos
-            </p>
+            </p> */}
 
             {/* Top-right: interaction hint */}
             <div className="fixed top-20 right-6 z-50 hidden md:flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-[var(--fg)]/40">
@@ -478,9 +478,9 @@ export default function ThreeLabPage() {
 
             {/* Bottom-center hint */}
             <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-30 text-center pointer-events-none">
-                <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--fg)]/40">
+                {/* <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--fg)]/40">
                     drag to orbit · scroll to zoom · click a node to enter
-                </p>
+                </p> */}
             </div>
 
             {/* Bottom-right stats */}

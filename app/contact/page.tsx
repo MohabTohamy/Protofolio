@@ -1,208 +1,172 @@
 'use client';
 
 import { useState } from 'react';
-import { Github, Linkedin, ArrowRight, ArrowUpRight } from 'lucide-react';
-import { Eyebrow, Button } from '@/components/UI';
+import { Github, Linkedin, ArrowUpRight, Copy, Check, Mail } from 'lucide-react';
+import { Eyebrow } from '@/components/UI';
+import { motion } from 'framer-motion';
+
+const EMAIL = 'MohabTohamyAbdallah@gmail.com';
 
 export default function ContactPage() {
-    const [data, setData] = useState({
-        name: '',
-        email: '',
-        subject: '',
-        message: '',
-    });
+    const [copied, setCopied] = useState(false);
 
-    const submit = (e: React.FormEvent) => {
-        e.preventDefault();
-        const body = `Name: ${data.name}\nEmail: ${data.email}\n\n${data.message}`;
-        window.location.href = `mailto:MohabTohamyAbdallah@gmail.com?subject=${encodeURIComponent(
-            data.subject
-        )}&body=${encodeURIComponent(body)}`;
+    const copy = () => {
+        navigator.clipboard.writeText(EMAIL);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
     };
-
-    const change = (
-        e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-    ) => {
-        setData({ ...data, [e.target.name]: e.target.value });
-    };
-
-    const inputCls =
-        'w-full bg-transparent border-0 border-b border-[var(--hairline-strong)] py-3 text-[var(--fg)] focus:outline-none focus:border-[var(--accent)] transition-colors placeholder:text-[var(--fg-dim)]';
 
     return (
-        <div className="px-6 pt-24 md:pt-32 pb-32">
-            <div className="max-w-3xl mx-auto mb-16">
-                <Eyebrow className="mb-6">Say hi</Eyebrow>
-                <h1 className="font-display text-5xl md:text-7xl text-[var(--fg)] leading-[0.98] mb-8">
-                    Let's talk.
-                </h1>
-                <p className="text-lg text-[var(--fg-muted)] leading-relaxed max-w-xl">
-                    Looking for frontend, automation, or full-stack work in
-                    Austria. Open to relocation and visa sponsorship. The fastest
-                    way to reach me is email — but the form below works too.
-                </p>
-            </div>
+        <div className="px-6 pt-24 md:pt-32 pb-32 min-h-screen">
+            <div className="max-w-6xl mx-auto">
 
-            <div className="max-w-6xl mx-auto grid md:grid-cols-12 gap-12 mb-20">
-                {/* Direct contact */}
-                <div className="md:col-span-5 space-y-10">
-                    <div>
-                        <Eyebrow className="mb-4">Direct</Eyebrow>
+                {/* ── Header ── */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                    className="mb-20"
+                >
+                    <Eyebrow className="mb-6">Say hi</Eyebrow>
+                    <h1 className="font-display text-5xl md:text-7xl text-[var(--fg)] leading-[0.98] mb-8 max-w-2xl">
+                        Let's talk.
+                    </h1>
+                    <p className="text-lg text-[var(--fg-muted)] leading-relaxed max-w-xl">
+                        Looking for frontend, automation, or full-stack work in Austria.
+                        Open to relocation and visa sponsorship.
+                    </p>
+                </motion.div>
+
+                {/* ── Big email block ── */}
+                <motion.div
+                    initial={{ opacity: 0, y: 24 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1], delay: 0.1 }}
+                    className="border-t border-[var(--hairline)] pt-12 mb-20"
+                >
+                    <p className="text-xs uppercase tracking-[0.18em] text-[var(--fg-dim)] mb-6">
+                        Email — the fastest way
+                    </p>
+
+                    <a
+                        href={`mailto:${EMAIL}`}
+                        className="group block mb-8"
+                    >
+                        <span className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-[var(--fg)] leading-[1.0] break-all group-hover:text-[var(--accent)] transition-colors duration-300">
+                            {EMAIL}
+                        </span>
+                    </a>
+
+                    <div className="flex flex-wrap items-center gap-3">
                         <a
-                            href="mailto:MohabTohamyAbdallah@gmail.com"
-                            className="block group"
+                            href={`mailto:${EMAIL}`}
+                            className="inline-flex items-center gap-2 px-5 py-2.5 bg-[var(--accent)] text-[var(--bg)] rounded-full text-sm font-medium hover:bg-[var(--accent)]/90 transition-colors"
                         >
-                            <p className="font-display text-2xl md:text-3xl text-[var(--fg)] group-hover:text-[var(--accent)] transition-colors break-all leading-tight">
-                                MohabTohamyAbdallah@gmail.com
-                            </p>
+                            <Mail className="w-4 h-4" />
+                            Open in mail app
                         </a>
+
+                        <button
+                            onClick={copy}
+                            className="inline-flex items-center gap-2 px-5 py-2.5 border border-[var(--hairline-strong)] text-[var(--fg-muted)] rounded-full text-sm hover:border-[var(--fg)]/30 hover:text-[var(--fg)] transition-all"
+                        >
+                            {copied ? (
+                                <>
+                                    <Check className="w-4 h-4 text-[var(--accent)]" />
+                                    <span className="text-[var(--accent)]">Copied</span>
+                                </>
+                            ) : (
+                                <>
+                                    <Copy className="w-4 h-4" />
+                                    Copy address
+                                </>
+                            )}
+                        </button>
+                    </div>
+                </motion.div>
+
+                {/* ── Info grid ── */}
+                <motion.div
+                    initial={{ opacity: 0, y: 24 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1], delay: 0.2 }}
+                    className="border-t border-[var(--hairline)] pt-12 grid md:grid-cols-3 gap-12"
+                >
+                    {/* Location */}
+                    <div>
+                        <Eyebrow className="mb-5">Location</Eyebrow>
+                        <p className="text-[var(--fg)] mb-1">Riyadh, Saudi Arabia</p>
+                        <p className="text-sm text-[var(--fg-muted)] leading-relaxed">
+                            Targeting Austria —<br />Vienna, Linz, St. Pölten
+                        </p>
                     </div>
 
+                    {/* Elsewhere */}
                     <div>
-                        <Eyebrow className="mb-4">Elsewhere</Eyebrow>
-                        <div className="space-y-3">
+                        <Eyebrow className="mb-5">Elsewhere</Eyebrow>
+                        <div className="space-y-4">
                             <a
                                 href="https://github.com/MohabTohamy"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="link-arrow text-base"
+                                className="flex items-center justify-between group"
                             >
-                                <Github className="w-4 h-4" />
-                                github.com/MohabTohamy
-                                <ArrowUpRight className="w-3.5 h-3.5" />
+                                <div className="flex items-center gap-2 text-[var(--fg-muted)] group-hover:text-[var(--fg)] transition-colors">
+                                    <Github className="w-4 h-4 shrink-0" />
+                                    <span className="text-sm">github.com/MohabTohamy</span>
+                                </div>
+                                <ArrowUpRight className="w-3.5 h-3.5 text-[var(--fg-dim)] group-hover:text-[var(--accent)] group-hover:-translate-y-0.5 group-hover:translate-x-0.5 transition-all" />
                             </a>
-                            <br />
                             <a
                                 href="https://www.linkedin.com/in/mohab-tohamy/"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="link-arrow text-base"
+                                className="flex items-center justify-between group"
                             >
-                                <Linkedin className="w-4 h-4" />
-                                linkedin.com/in/mohab-tohamy
-                                <ArrowUpRight className="w-3.5 h-3.5" />
+                                <div className="flex items-center gap-2 text-[var(--fg-muted)] group-hover:text-[var(--fg)] transition-colors">
+                                    <Linkedin className="w-4 h-4 shrink-0" />
+                                    <span className="text-sm">linkedin.com/in/mohab-tohamy</span>
+                                </div>
+                                <ArrowUpRight className="w-3.5 h-3.5 text-[var(--fg-dim)] group-hover:text-[var(--accent)] group-hover:-translate-y-0.5 group-hover:translate-x-0.5 transition-all" />
                             </a>
                         </div>
                     </div>
 
+                    {/* Open to */}
                     <div>
-                        <Eyebrow className="mb-4">Location</Eyebrow>
-                        <p className="text-[var(--fg)]">Riyadh, Saudi Arabia</p>
-                        <p className="text-[var(--fg-muted)] text-sm mt-1">
-                            Targeting Austria — Vienna, Linz, St. Pölten
-                        </p>
-                    </div>
-
-                    <div>
-                        <Eyebrow className="mb-4">Open to</Eyebrow>
-                        <ul className="space-y-2 text-sm text-[var(--fg-muted)]">
-                            <li className="flex gap-3">
-                                <span className="text-[var(--accent)] shrink-0">—</span>
-                                Frontend (React / Next.js / TypeScript)
-                            </li>
-                            <li className="flex gap-3">
-                                <span className="text-[var(--accent)] shrink-0">—</span>
-                                Full-stack web applications
-                            </li>
-                            <li className="flex gap-3">
-                                <span className="text-[var(--accent)] shrink-0">—</span>
-                                Python automation & internal tools
-                            </li>
-                            <li className="flex gap-3">
-                                <span className="text-[var(--accent)] shrink-0">—</span>
-                                Visa sponsorship & relocation
-                            </li>
+                        <Eyebrow className="mb-5">Open to</Eyebrow>
+                        <ul className="space-y-2.5">
+                            {[
+                                'Frontend — React / Next.js / TypeScript',
+                                'Full-stack web applications',
+                                'Python automation & internal tools',
+                                'Visa sponsorship & relocation',
+                            ].map((item) => (
+                                <li key={item} className="flex gap-3 text-sm text-[var(--fg-muted)]">
+                                    <span className="text-[var(--accent)] shrink-0 mt-0.5">—</span>
+                                    {item}
+                                </li>
+                            ))}
                         </ul>
                     </div>
-                </div>
+                </motion.div>
 
-                {/* Form */}
-                <form
-                    onSubmit={submit}
-                    className="md:col-span-7 space-y-6 self-start"
+                {/* ── Availability bar ── */}
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.5, delay: 0.35 }}
+                    className="border-t border-[var(--hairline)] mt-16 pt-8 flex items-center gap-3"
                 >
-                    <Eyebrow>Or send a message</Eyebrow>
+                    <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-green-400" />
+                    </span>
+                    <p className="text-xs uppercase tracking-[0.18em] text-[var(--fg-dim)]">
+                        Available for new opportunities — 2026
+                    </p>
+                </motion.div>
 
-                    <div>
-                        <label
-                            htmlFor="name"
-                            className="block text-xs uppercase tracking-wider text-[var(--fg-muted)] mb-2"
-                        >
-                            Name
-                        </label>
-                        <input
-                            id="name"
-                            name="name"
-                            type="text"
-                            value={data.name}
-                            onChange={change}
-                            required
-                            className={inputCls}
-                            placeholder="Your name"
-                        />
-                    </div>
-
-                    <div>
-                        <label
-                            htmlFor="email"
-                            className="block text-xs uppercase tracking-wider text-[var(--fg-muted)] mb-2"
-                        >
-                            Email
-                        </label>
-                        <input
-                            id="email"
-                            name="email"
-                            type="email"
-                            value={data.email}
-                            onChange={change}
-                            required
-                            className={inputCls}
-                            placeholder="you@example.com"
-                        />
-                    </div>
-
-                    <div>
-                        <label
-                            htmlFor="subject"
-                            className="block text-xs uppercase tracking-wider text-[var(--fg-muted)] mb-2"
-                        >
-                            Subject
-                        </label>
-                        <input
-                            id="subject"
-                            name="subject"
-                            type="text"
-                            value={data.subject}
-                            onChange={change}
-                            required
-                            className={inputCls}
-                            placeholder="What's this about?"
-                        />
-                    </div>
-
-                    <div>
-                        <label
-                            htmlFor="message"
-                            className="block text-xs uppercase tracking-wider text-[var(--fg-muted)] mb-2"
-                        >
-                            Message
-                        </label>
-                        <textarea
-                            id="message"
-                            name="message"
-                            value={data.message}
-                            onChange={change}
-                            required
-                            rows={5}
-                            className={`${inputCls} resize-none`}
-                            placeholder="Tell me about the role, your team, or just say hi."
-                        />
-                    </div>
-
-                    <Button type="submit" variant="primary">
-                        Send <ArrowRight className="w-4 h-4" />
-                    </Button>
-                </form>
             </div>
         </div>
     );

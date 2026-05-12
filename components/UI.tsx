@@ -71,6 +71,7 @@ interface ButtonProps {
     className?: string;
     fullWidth?: boolean;
     type?: 'button' | 'submit' | 'reset';
+    disabled?: boolean;
 }
 
 const variantStyles: Record<NonNullable<ButtonProps['variant']>, string> = {
@@ -94,10 +95,12 @@ export function Button({
     className = '',
     fullWidth = false,
     type = 'button',
+    disabled = false,
 }: ButtonProps) {
     const base =
         'inline-flex items-center justify-center gap-2 text-sm font-medium transition-all duration-200';
-    const cls = `${base} ${variantStyles[variant]} ${fullWidth ? 'w-full' : ''} ${className}`;
+    const disabledCls = disabled ? 'opacity-50 cursor-not-allowed pointer-events-none' : '';
+    const cls = `${base} ${variantStyles[variant]} ${fullWidth ? 'w-full' : ''} ${disabledCls} ${className}`;
 
     if (href) {
         const isExternal =
@@ -122,7 +125,7 @@ export function Button({
     }
 
     return (
-        <button type={type} onClick={onClick} className={cls}>
+        <button type={type} onClick={onClick} disabled={disabled} className={cls}>
             {children}
         </button>
     );
